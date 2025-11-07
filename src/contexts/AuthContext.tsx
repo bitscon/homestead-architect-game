@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
   id: string;
-  first_name?: string;
-  last_name?: string;
+  first_name: string | null;
+  last_name: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface AuthContextType {
@@ -45,7 +47,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
               .select('*')
               .eq('id', session.user.id)
               .single()
-              .then(({ data }: any) => {
+              .then(({ data }: { data: Profile | null }) => {
                 setProfile(data);
               });
           }, 0);
@@ -66,7 +68,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
           .select('*')
           .eq('id', session.user.id)
           .single()
-          .then(({ data }: any) => {
+          .then(({ data }: { data: Profile | null }) => {
             setProfile(data);
             setLoading(false);
           });
