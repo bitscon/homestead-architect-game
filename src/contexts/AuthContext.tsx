@@ -40,12 +40,12 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         // Fetch profile when user logs in
         if (session?.user) {
           setTimeout(() => {
-            supabase
+            (supabase as any)
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
               .single()
-              .then(({ data }) => {
+              .then(({ data }: any) => {
                 setProfile(data);
               });
           }, 0);
@@ -61,12 +61,12 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        supabase
+        (supabase as any)
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single()
-          .then(({ data }) => {
+          .then(({ data }: any) => {
             setProfile(data);
             setLoading(false);
           });
