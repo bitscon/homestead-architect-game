@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import PropertyAssessment from "./pages/PropertyAssessment";
+import SeasonalCalendar from "./pages/SeasonalCalendar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PropertyAssessment />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/seasonal-calendar" 
+              element={
+                <ProtectedRoute>
+                  <SeasonalCalendar />
                 </ProtectedRoute>
               } 
             />
