@@ -225,14 +225,13 @@ export function TaskForm({ task, properties = [], onSubmit, onCancel }: TaskForm
                         <SelectValue placeholder="Select property" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="">None</SelectItem>
-                      {properties.map((property) => (
-                        <SelectItem key={property.id} value={property.id}>
-                          {property.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                  <SelectContent>
+                    {properties.map((property) => (
+                      <SelectItem key={property.id} value={property.id}>
+                        {property.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>

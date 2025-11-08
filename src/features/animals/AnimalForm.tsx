@@ -289,7 +289,6 @@ export function AnimalForm({ animal, properties = [], onSubmit, onCancel }: Anim
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
                     {properties.map((property) => (
                       <SelectItem key={property.id} value={property.id}>
                         {property.name}
