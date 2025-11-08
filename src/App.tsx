@@ -14,6 +14,7 @@ import HealthHub from "./pages/HealthHub";
 import InventoryManagement from "./pages/InventoryManagement";
 import HomesteadBalance from "./pages/HomesteadBalance";
 import HomesteadJournal from "./pages/HomesteadJournal";
+import HomesteadGoals from "./pages/HomesteadGoals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <HomesteadJournal />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/homestead-goals" 
+              element={
+                <ProtectedRoute>
+                  <HomesteadGoals />
                 </ProtectedRoute>
               } 
             />
