@@ -64,6 +64,28 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/11a749b6-e7d5-42c3-ad64-284b3ce6f02c) and click on Share -> Publish.
 
+## Run in Docker
+
+This application can be containerized and run using Docker:
+
+### 1. Build the image:
+```sh
+docker build -t homestead-web:latest .
+```
+
+### 2. Run the container:
+```sh
+docker run -d --name homestead-web -p 8081:80 \
+  -e VITE_SUPABASE_URL=https://your-supabase-url \
+  -e VITE_SUPABASE_ANON_KEY=your-anon-key \
+  homestead-web:latest
+```
+
+### 3. Open the app:
+Visit http://localhost:8081
+
+**Note:** In production, this app will be served at https://homesteadarchitect.com
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
