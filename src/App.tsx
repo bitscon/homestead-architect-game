@@ -19,6 +19,7 @@ import HomesteadJournal from "./pages/HomesteadJournal";
 import HomesteadGoals from "./pages/HomesteadGoals";
 import CropPlanner from "./pages/CropPlanner";
 import InfrastructurePlanning from "./pages/InfrastructurePlanning";
+import BreedingTracker from "./pages/BreedingTracker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -142,6 +143,16 @@ const App = () => (
                 <ProtectedRoute>
                   <ProtectedLayout>
                     <InfrastructurePlanning />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/breeding-tracker" 
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <BreedingTracker />
                   </ProtectedLayout>
                 </ProtectedRoute>
               } 
