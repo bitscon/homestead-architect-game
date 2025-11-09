@@ -166,7 +166,7 @@ const CropPlanner = () => {
         </Link>
         <div>
           <h1 className="text-3xl font-bold text-foreground">Crop Planner</h1>
-          <p className="text-muted-foreground">Plan your crops and growing seasons</p>
+          <p className="text-muted-foreground">Plan your crops, rotations, and planting schedule.</p>
         </div>
       </div>
 
