@@ -109,13 +109,20 @@ const BreedingTracker = () => {
   };
 
   // Derive statistics
-  const pregnantCount = events.filter(
-    e => e.event_type === 'pregnancy_confirmation' && !events.some(b => b.event_type === 'birth' && b.animal_id === e.animal_id && new Date(b.date) > new Date(e.date))
-  ).length;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const upcomingEvents = events.filter(
-    e => e.expected_due_date && new Date(e.expected_due_date) > new Date()
-  ).sort((a, b) => new Date(a.expected_due_date!).getTime() - new Date(b.expected_due_date!).getTime());
+  const activePregnancies = events
+    .filter(
+      e =>
+        e.event_type === 'pregnancy_confirmation' &&
+        (!e.expected_due_date || new Date(e.expected_due_date) >= today)
+    )
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const upcomingEvents = events
+    .filter(e => e.expected_due_date && new Date(e.expected_due_date) >= today)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const heatCycles = events.filter(e => e.event_type === 'heat_cycle');
   const breedingRecords = events.filter(e => e.event_type === 'breeding');
@@ -210,24 +217,21 @@ const BreedingTracker = () => {
                 <CardTitle>Active Pregnancies</CardTitle>
               </CardHeader>
               <CardContent>
-                {pregnantCount > 0 ? (
+                {activePregnancies.length > 0 ? (
                   <div className="space-y-2">
-                    {events
-                      .filter(e => e.event_type === 'pregnancy_confirmation' && !events.some(b => b.event_type === 'birth' && b.animal_id === e.animal_id))
-                      .slice(0, 5)
-                      .map(event => (
-                        <div key={event.id} className="p-3 bg-muted/50 rounded-lg">
-                          <div className="font-medium text-sm">Animal ID: {event.animal_id}</div>
-                          <div className="text-xs text-muted-foreground">
-                            Confirmed: {format(new Date(event.date), 'PP')}
-                          </div>
-                          {event.expected_due_date && (
-                            <div className="text-xs text-muted-foreground">
-                              Due: {format(new Date(event.expected_due_date), 'PP')}
-                            </div>
-                          )}
+                    {activePregnancies.slice(0, 5).map(event => (
+                      <div key={event.id} className="p-3 bg-muted/50 rounded-lg">
+                        <div className="font-medium text-sm">Animal ID: {event.animal_id}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Confirmed: {format(new Date(event.date), 'PP')}
                         </div>
-                      ))}
+                        {event.expected_due_date && (
+                          <div className="text-xs text-muted-foreground">
+                            Due: {format(new Date(event.expected_due_date), 'PP')}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <EmptyState
