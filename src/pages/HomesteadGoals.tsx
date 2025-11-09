@@ -11,6 +11,7 @@ import { GoalForm } from '@/features/goals/GoalForm';
 import { GoalUpdateModal } from '@/features/goals/GoalUpdateModal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { supabase } from '@/integrations/supabase/client';
 import {
   getGoals,
   createGoal,
@@ -29,6 +30,7 @@ const HomesteadGoals = () => {
   const [selectedGoal, setSelectedGoal] = useState<HomesteadGoal | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateGoalId, setUpdateGoalId] = useState<string | null>(null);
 
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ['homestead-goals', user?.id],
@@ -36,11 +38,33 @@ const HomesteadGoals = () => {
     enabled: !!user,
   });
 
-  const { data: updates = [] } = useQuery({
-    queryKey: ['goal-updates', selectedGoal?.id, user?.id],
-    queryFn: () => getGoalUpdates(selectedGoal!.id, user!.id),
-    enabled: !!selectedGoal && !!user,
+  // Fetch all goal updates for all goals
+  const { data: allUpdates = [] } = useQuery({
+    queryKey: ['all-goal-updates', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await (supabase as any)
+        .from('goal_updates')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
   });
+
+  // Get updates for selected goal
+  const selectedGoalUpdates = selectedGoal 
+    ? allUpdates.filter(u => u.goal_id === selectedGoal.id)
+    : [];
+
+  // Helper function to get latest update for a goal
+  const getLatestUpdate = (goalId: string) => {
+    const goalUpdates = allUpdates.filter(u => u.goal_id === goalId);
+    return goalUpdates.length > 0 ? goalUpdates[0] : null;
+  };
 
   const createMutation = useMutation({
     mutationFn: (data: any) =>
@@ -109,15 +133,18 @@ const HomesteadGoals = () => {
     mutationFn: (data: any) =>
       createGoalUpdate({
         ...data,
-        goal_id: selectedGoal!.id,
+        goal_id: updateGoalId || selectedGoal!.id,
         user_id: user!.id,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goal-updates'] });
+      queryClient.invalidateQueries({ queryKey: ['all-goal-updates'] });
+      queryClient.invalidateQueries({ queryKey: ['homestead-goals'] });
       toast({
         title: 'Success',
         description: 'Progress update added successfully',
       });
+      setShowUpdateModal(false);
+      setUpdateGoalId(null);
     },
     onError: (error: Error) => {
       toast({
@@ -152,14 +179,19 @@ const HomesteadGoals = () => {
     setShowForm(false);
   };
 
-  const calculateProgress = (goal: HomesteadGoal, updates: GoalUpdateEntry[]) => {
-    if (!goal.start_value || !goal.target_value) return 0;
-    const latestUpdate = updates[0];
+  const calculateProgress = (goal: HomesteadGoal) => {
+    if (goal.start_value === null || !goal.target_value) return 0;
+    const latestUpdate = getLatestUpdate(goal.id);
     const currentValue = latestUpdate?.current_value ?? goal.start_value;
     const range = goal.target_value - goal.start_value;
     if (range === 0) return 100;
     const progress = ((currentValue - goal.start_value) / range) * 100;
     return Math.max(0, Math.min(100, progress));
+  };
+
+  const getCurrentValue = (goal: HomesteadGoal) => {
+    const latestUpdate = getLatestUpdate(goal.id);
+    return latestUpdate?.current_value ?? goal.start_value ?? 0;
   };
 
   if (isLoading) {
@@ -170,68 +202,90 @@ const HomesteadGoals = () => {
     );
   }
 
-  const progress = selectedGoal ? calculateProgress(selectedGoal, updates) : 0;
-  const latestUpdate = updates[0];
 
   const activeGoals = goals.filter(goal => goal.status === 'active');
   const achievedGoals = goals.filter(goal => goal.status === 'achieved');
   const archivedGoals = goals.filter(goal => goal.status === 'archived');
 
-  const renderGoalCard = (goal: HomesteadGoal) => (
-    <Card 
-      key={goal.id}
-      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-      onClick={() => handleSelectGoal(goal)}
-    >
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="font-semibold text-foreground">{goal.title}</h3>
-        <div className="flex gap-1">
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-8 w-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedGoal(goal);
-              setShowForm(true);
-            }}
-          >
-            <Pencil className="h-3 w-3" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm('Are you sure you want to delete this goal?')) {
-                deleteMutation.mutate(goal.id);
-              }
-            }}
-          >
-            <Trash2 className="h-3 w-3 text-destructive" />
-          </Button>
-        </div>
-      </div>
-      {goal.description && (
-        <p className="text-sm text-muted-foreground mb-3">{goal.description}</p>
-      )}
-      {goal.start_value !== null && goal.target_value !== null && (
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Progress</span>
-            <span>{goal.start_value} / {goal.target_value} {goal.target_metric}</span>
+  const renderGoalCard = (goal: HomesteadGoal, showUpdateButton: boolean = false) => {
+    const currentValue = getCurrentValue(goal);
+    const progress = calculateProgress(goal);
+    
+    return (
+      <Card 
+        key={goal.id}
+        className="p-4 hover:shadow-md transition-shadow"
+      >
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="font-semibold text-foreground">{goal.title}</h3>
+          <div className="flex gap-1">
+            {showUpdateButton && (
+              <Button 
+                size="sm"
+                variant="default"
+                className="h-7 px-2 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUpdateGoalId(goal.id);
+                  setShowUpdateModal(true);
+                }}
+              >
+                <TrendingUp className="h-3 w-3 mr-1" />
+                Update
+              </Button>
+            )}
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedGoal(goal);
+                setShowForm(true);
+              }}
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm('Are you sure you want to delete this goal?')) {
+                  deleteMutation.mutate(goal.id);
+                }
+              }}
+            >
+              <Trash2 className="h-3 w-3 text-destructive" />
+            </Button>
           </div>
-          <Progress value={calculateProgress(goal, [])} className="h-2" />
         </div>
-      )}
-      {goal.target_date && (
-        <p className="text-xs text-muted-foreground mt-2">
-          Target: {format(new Date(goal.target_date), 'PPP')}
-        </p>
-      )}
-    </Card>
-  );
+        {goal.description && (
+          <p className="text-sm text-muted-foreground mb-3">{goal.description}</p>
+        )}
+        {goal.target_value !== null && (
+          <div className="space-y-1 mb-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Progress</span>
+              <span className="font-medium text-foreground">
+                Current: {currentValue} / Target: {goal.target_value} {goal.target_metric}
+              </span>
+            </div>
+            <Progress value={progress} className="h-2" />
+            <p className="text-xs text-muted-foreground text-right">
+              {Math.round(progress)}% complete
+            </p>
+          </div>
+        )}
+        {goal.target_date && (
+          <p className="text-xs text-muted-foreground">
+            Target: {format(new Date(goal.target_date), 'PPP')}
+          </p>
+        )}
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -279,7 +333,7 @@ const HomesteadGoals = () => {
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3 space-y-3">
             {activeGoals.length > 0 ? (
-              activeGoals.map(renderGoalCard)
+              activeGoals.map(goal => renderGoalCard(goal, true))
             ) : (
               <EmptyState
                 title="No Active Goals"
@@ -311,7 +365,7 @@ const HomesteadGoals = () => {
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3 space-y-3">
             {achievedGoals.length > 0 ? (
-              achievedGoals.map(renderGoalCard)
+              achievedGoals.map(goal => renderGoalCard(goal, false))
             ) : (
               <EmptyState
                 title="No Achieved Goals Yet"
@@ -337,7 +391,7 @@ const HomesteadGoals = () => {
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3 space-y-3">
             {archivedGoals.length > 0 ? (
-              archivedGoals.map(renderGoalCard)
+              archivedGoals.map(goal => renderGoalCard(goal, false))
             ) : (
               <EmptyState
                 title="No Archived Goals"
@@ -351,9 +405,16 @@ const HomesteadGoals = () => {
 
       <GoalUpdateModal
         open={showUpdateModal}
-        onClose={() => setShowUpdateModal(false)}
+        onClose={() => {
+          setShowUpdateModal(false);
+          setUpdateGoalId(null);
+        }}
         onSubmit={(data) => createUpdateMutation.mutate(data)}
-        goalTitle={selectedGoal?.title || ''}
+        goalTitle={
+          updateGoalId 
+            ? goals.find(g => g.id === updateGoalId)?.title || ''
+            : selectedGoal?.title || ''
+        }
       />
     </div>
   );
