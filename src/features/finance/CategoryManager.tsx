@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FinancialCategory, CategoryInsert } from './api';
+import type { FinancialCategory, CategoryInsert } from '@/types/finance';
 import { Plus, Trash2, Edit } from 'lucide-react';
 
 const categorySchema = z.object({
@@ -89,158 +89,153 @@ export function CategoryManager({ categories, onCreate, onUpdate, onDelete }: Ca
   const expenseCategories = categories.filter((c) => c.type === 'expense');
 
   return (
-    <div className="space-y-6">
-      {/* Add/Edit Form */}
-      {isCreating && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingId ? 'Edit Category' : 'Add Category'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* Left Column: Add Category Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{editingId ? 'Edit Category' : 'Add Category'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Egg Sales" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <Input placeholder="e.g., Egg Sales" {...field} />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <SelectContent>
+                        <SelectItem value="income">Income</SelectItem>
+                        <SelectItem value="expense">Expense</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="income">Income</SelectItem>
-                          <SelectItem value="expense">Expense</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-3">
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {editingId ? 'Update' : 'Add'} Category
-                  </Button>
+              <div className="flex gap-3">
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {editingId ? 'Update' : 'Add'} Category
+                </Button>
+                {editingId && (
                   <Button type="button" variant="outline" onClick={handleCancel}>
                     Cancel
                   </Button>
+                )}
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* Right Column: Your Categories */}
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Categories</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Expense Categories */}
+            <div>
+              <h3 className="font-semibold mb-3 text-destructive">Expenses</h3>
+              {expenseCategories.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No expense categories yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {expenseCategories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="flex items-center justify-between p-3 rounded-md border bg-card"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium">{category.name}</span>
+                        <Badge variant="outline">Expense</Badge>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(category)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(category.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </form>
-            </Form>
+              )}
+            </div>
+
+            {/* Income Categories */}
+            <div>
+              <h3 className="font-semibold mb-3 text-green-600 dark:text-green-400">Income</h3>
+              {incomeCategories.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No income categories yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {incomeCategories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="flex items-center justify-between p-3 rounded-md border bg-card"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium">{category.name}</span>
+                        <Badge variant="secondary">Income</Badge>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(category)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(category.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
-      )}
-
-      {!isCreating && (
-        <Button onClick={() => setIsCreating(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Category
-        </Button>
-      )}
-
-      {/* Income Categories */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Income Categories</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {incomeCategories.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No income categories yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {incomeCategories.map((category) => (
-                <div
-                  key={category.id}
-                  className="flex items-center justify-between p-3 rounded-md border bg-card"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">{category.name}</span>
-                    <Badge variant="secondary">Income</Badge>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(category)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(category.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Expense Categories */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Expense Categories</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {expenseCategories.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No expense categories yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {expenseCategories.map((category) => (
-                <div
-                  key={category.id}
-                  className="flex items-center justify-between p-3 rounded-md border bg-card"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">{category.name}</span>
-                    <Badge variant="outline">Expense</Badge>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(category)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(category.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }
