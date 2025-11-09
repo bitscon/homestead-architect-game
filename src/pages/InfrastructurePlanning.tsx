@@ -1,27 +1,77 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { StatCard, SectionHeader, EmptyState, TabHeader, FilterBar } from "@/components/ui";
 import { Plus, AlertCircle, Lightbulb, Calendar, Hammer, DollarSign, CheckCircle, Clock, Wrench } from "lucide-react";
+import { InfrastructureModal } from "@/features/infrastructure/InfrastructureModal";
+import { InfrastructureFormData } from "@/features/infrastructure/formSchema";
+import {
+  getInfrastructureProjects,
+  createInfrastructureProject,
+  InfrastructureProject,
+  InfrastructureProjectInsert,
+} from "@/features/infrastructure/api";
 
 export default function InfrastructurePlanning() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Mock data - replace with Supabase query
-  const projects = [];
-  const totalBudget = 0;
-  const plannedBudget = 0;
-  const inProgressBudget = 0;
-  const completedBudget = 0;
-  const plannedCount = 0;
-  const inProgressCount = 0;
-  const completedCount = 0;
+  // Fetch infrastructure projects
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ["infrastructure", user?.id],
+    queryFn: () => getInfrastructureProjects(user!.id),
+    enabled: !!user?.id,
+  });
+
+  // Create project mutation
+  const createMutation = useMutation({
+    mutationFn: async (projectData: InfrastructureProjectInsert) => {
+      return createInfrastructureProject(user!.id, projectData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["infrastructure", user?.id] });
+      toast({
+        title: "Success",
+        description: "Infrastructure project created successfully",
+      });
+      setIsModalOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create infrastructure project",
+        variant: "destructive",
+      });
+      console.error("Failed to create project:", error);
+    },
+  });
+
+  // Calculate statistics
+  const totalBudget = projects.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+  const plannedProjects = projects.filter((p) => p.status === "planned");
+  const inProgressProjects = projects.filter((p) => p.status === "in_progress");
+  const completedProjects = projects.filter((p) => p.status === "completed");
+  
+  const plannedCount = plannedProjects.length;
+  const inProgressCount = inProgressProjects.length;
+  const completedCount = completedProjects.length;
+  
+  const plannedBudget = plannedProjects.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+  const inProgressBudget = inProgressProjects.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+  const completedBudget = completedProjects.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
 
   const budgetProgress = totalBudget > 0 ? ((plannedBudget + inProgressBudget + completedBudget) / totalBudget) * 100 : 0;
 
@@ -51,11 +101,11 @@ export default function InfrastructurePlanning() {
 
   // Filtered projects based on search and filters
   const filteredProjects = useMemo(() => {
-    return projects.filter((project: any) => {
+    return projects.filter((project: InfrastructureProject) => {
       // Search filter
       const matchesSearch = !searchQuery || 
         project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        project.notes?.toLowerCase().includes(searchQuery.toLowerCase());
 
       // Status filter
       const matchesStatus = statusFilter === "all" || project.status === statusFilter;
@@ -66,6 +116,20 @@ export default function InfrastructurePlanning() {
       return matchesSearch && matchesStatus && matchesType;
     });
   }, [projects, searchQuery, statusFilter, typeFilter]);
+
+  const handleCreateProject = async (data: InfrastructureFormData) => {
+    const projectData = {
+      name: data.name,
+      type: data.type,
+      status: data.status,
+      priority: data.priority,
+      estimated_cost: data.estimated_cost,
+      planned_completion: data.planned_completion ? data.planned_completion.toISOString() : undefined,
+      materials_needed: data.materials_needed,
+      notes: data.notes,
+    };
+    await createMutation.mutateAsync(projectData);
+  };
 
   return (
     <div className="space-y-6">
@@ -84,7 +148,7 @@ export default function InfrastructurePlanning() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <SectionHeader title="Infrastructure Overview" />
-              <Button>
+              <Button onClick={() => setIsModalOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Project
               </Button>
@@ -127,13 +191,17 @@ export default function InfrastructurePlanning() {
                 <CardDescription>Manage all your infrastructure development projects</CardDescription>
               </CardHeader>
               <CardContent>
-                {projects.length === 0 ? (
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : projects.length === 0 ? (
                   <EmptyState
                     title="No infrastructure projects yet"
                     description="Start planning your homestead infrastructure"
                     icon={Wrench}
                     action={
-                      <Button>
+                      <Button onClick={() => setIsModalOpen(true)}>
                         <Plus className="mr-2 h-4 w-4" />
                         Create First Project
                       </Button>
@@ -154,7 +222,7 @@ export default function InfrastructurePlanning() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <SectionHeader title="Project Planner" />
-              <Button>
+              <Button onClick={() => setIsModalOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 New Project
               </Button>
@@ -233,7 +301,11 @@ export default function InfrastructurePlanning() {
                 </div>
               </CardHeader>
               <CardContent>
-                {filteredProjects.length === 0 ? (
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : filteredProjects.length === 0 ? (
                   <EmptyState
                     title="No projects match your filters"
                     description="Try adjusting your search or filters"
@@ -241,21 +313,31 @@ export default function InfrastructurePlanning() {
                   />
                 ) : viewMode === "grid" ? (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredProjects.map((project: any) => (
+                    {filteredProjects.map((project) => (
                       <Card key={project.id} className="hover:shadow-md transition-shadow">
                         <CardHeader>
                           <CardTitle className="text-lg">{project.name}</CardTitle>
-                          <CardDescription>{project.type}</CardDescription>
+                          <CardDescription className="capitalize">
+                            {project.type.replace(/_/g, " ")}
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Status:</span>
-                              <span className="font-medium">{project.status}</span>
+                              <span className="font-medium capitalize">
+                                {project.status.replace(/_/g, " ")}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Priority:</span>
+                              <span className="font-medium capitalize">{project.priority}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Budget:</span>
-                              <span className="font-medium">${project.budget?.toLocaleString()}</span>
+                              <span className="font-medium">
+                                ${(project.estimated_cost || 0).toLocaleString()}
+                              </span>
                             </div>
                           </div>
                         </CardContent>
@@ -264,22 +346,32 @@ export default function InfrastructurePlanning() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {filteredProjects.map((project: any) => (
+                    {filteredProjects.map((project) => (
                       <div
                         key={project.id}
                         className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex-1">
                           <h4 className="font-medium">{project.name}</h4>
-                          <p className="text-sm text-muted-foreground">{project.type}</p>
+                          <p className="text-sm text-muted-foreground capitalize">
+                            {project.type.replace(/_/g, " ")}
+                          </p>
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="text-right">
-                            <p className="text-sm font-medium">{project.status}</p>
+                            <p className="text-sm font-medium capitalize">
+                              {project.status.replace(/_/g, " ")}
+                            </p>
                             <p className="text-xs text-muted-foreground">Status</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-medium">${project.budget?.toLocaleString()}</p>
+                            <p className="text-sm font-medium capitalize">{project.priority}</p>
+                            <p className="text-xs text-muted-foreground">Priority</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium">
+                              ${(project.estimated_cost || 0).toLocaleString()}
+                            </p>
                             <p className="text-xs text-muted-foreground">Budget</p>
                           </div>
                         </div>
@@ -431,10 +523,10 @@ export default function InfrastructurePlanning() {
                   description="Add projects with start and end dates to see them on the calendar"
                   icon={Calendar}
                   action={
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Schedule Project
-                    </Button>
+                  <Button onClick={() => setIsModalOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Schedule Project
+                  </Button>
                   }
                   className="py-16"
                 />
