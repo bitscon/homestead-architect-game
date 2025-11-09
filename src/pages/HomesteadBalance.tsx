@@ -37,15 +37,18 @@ export default function HomesteadBalance() {
   const { toast } = useToast();
   const [categories, setCategories] = useState<FinancialCategory[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [monthlyTransactions, setMonthlyTransactions] = useState<Transaction[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [monthlyLoading, setMonthlyLoading] = useState(true);
   const [filters, setFilters] = useState<TransactionFilters>({});
 
   useEffect(() => {
     if (user?.id) {
       loadData();
+      loadMonthlyTransactions();
     }
   }, [user?.id]);
 
@@ -87,6 +90,35 @@ export default function HomesteadBalance() {
       setTransactions(data);
     } catch (error) {
       console.error('Failed to load transactions:', error);
+    }
+  };
+
+  const loadMonthlyTransactions = async () => {
+    if (!user?.id) return;
+
+    try {
+      setMonthlyLoading(true);
+      // Get first and last day of current month
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const monthFilters: TransactionFilters = {
+        start_date: firstDay.toISOString().split('T')[0],
+        end_date: lastDay.toISOString().split('T')[0],
+      };
+
+      const data = await getTransactions(user.id, monthFilters);
+      setMonthlyTransactions(data);
+    } catch (error) {
+      console.error('Failed to load monthly transactions:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load monthly data',
+        variant: 'destructive',
+      });
+    } finally {
+      setMonthlyLoading(false);
     }
   };
 
@@ -161,6 +193,7 @@ export default function HomesteadBalance() {
       setTransactions([newTransaction, ...transactions]);
       setIsTransactionDialogOpen(false);
       setSelectedTransaction(null);
+      loadMonthlyTransactions(); // Refresh monthly data
       toast({
         title: 'Success',
         description: 'Transaction added successfully',
@@ -183,6 +216,7 @@ export default function HomesteadBalance() {
       setTransactions(transactions.map((t) => (t.id === updated.id ? updated : t)));
       setIsTransactionDialogOpen(false);
       setSelectedTransaction(null);
+      loadMonthlyTransactions(); // Refresh monthly data
       toast({
         title: 'Success',
         description: 'Transaction updated successfully',
@@ -205,6 +239,7 @@ export default function HomesteadBalance() {
     try {
       await deleteTransaction(id, user.id);
       setTransactions(transactions.filter((t) => t.id !== id));
+      loadMonthlyTransactions(); // Refresh monthly data
       toast({
         title: 'Success',
         description: 'Transaction deleted successfully',
@@ -247,22 +282,92 @@ export default function HomesteadBalance() {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
-            <FinanceDashboard transactions={transactions} />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Transactions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <TransactionTable
-                  transactions={transactions.slice(0, 10)}
-                  categories={categories}
-                  properties={properties}
-                  onEdit={handleEditTransaction}
-                  onDelete={handleDeleteTransaction}
-                />
-              </CardContent>
-            </Card>
+            {monthlyLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} Overview
+                  </h2>
+                  <p className="text-sm text-muted-foreground">Current month financial summary</p>
+                </div>
+                
+                <FinanceDashboard transactions={monthlyTransactions} />
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Monthly Income vs. Expenses</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Income</p>
+                          <p className="text-2xl font-bold text-primary">
+                            {new Intl.NumberFormat('en-US', {
+                              style: 'currency',
+                              currency: 'USD',
+                            }).format(
+                              monthlyTransactions
+                                .filter((t) => t.type === 'income')
+                                .reduce((sum, t) => sum + t.amount, 0)
+                            )}
+                          </p>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {monthlyTransactions.filter((t) => t.type === 'income').length} transactions
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Expenses</p>
+                          <p className="text-2xl font-bold text-destructive">
+                            {new Intl.NumberFormat('en-US', {
+                              style: 'currency',
+                              currency: 'USD',
+                            }).format(
+                              monthlyTransactions
+                                .filter((t) => t.type === 'expense')
+                                .reduce((sum, t) => sum + t.amount, 0)
+                            )}
+                          </p>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {monthlyTransactions.filter((t) => t.type === 'expense').length} transactions
+                        </div>
+                      </div>
+
+                      {monthlyTransactions.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">
+                          No transactions this month yet. Add your first transaction to get started.
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {monthlyTransactions.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Recent Transactions This Month</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <TransactionTable
+                        transactions={monthlyTransactions.slice(0, 10)}
+                        categories={categories}
+                        properties={properties}
+                        onEdit={handleEditTransaction}
+                        onDelete={handleDeleteTransaction}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="transactions" className="space-y-6">
