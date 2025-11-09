@@ -36,9 +36,8 @@ const formSchema = z.object({
   category: z.string().optional(),
   target_metric: z.string().optional(),
   start_value: z.string().optional(),
-  target_value: z.string().optional(),
+  target_value: z.string().min(1, 'Target value is required'),
   target_date: z.date().optional(),
-  status: z.enum(['active', 'achieved', 'archived']),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -50,12 +49,11 @@ interface GoalFormProps {
 }
 
 const categories = [
-  'Production',
-  'Infrastructure',
   'Financial',
+  'Production',
   'Sustainability',
-  'Education',
-  'Other',
+  'Infrastructure',
+  'Learning',
 ];
 
 export const GoalForm = ({ goal, onSubmit, onCancel }: GoalFormProps) => {
@@ -66,10 +64,9 @@ export const GoalForm = ({ goal, onSubmit, onCancel }: GoalFormProps) => {
       description: goal?.description || '',
       category: goal?.category || '',
       target_metric: goal?.target_metric || '',
-      start_value: goal?.start_value?.toString() || '',
+      start_value: goal?.start_value?.toString() || '0',
       target_value: goal?.target_value?.toString() || '',
       target_date: goal?.target_date ? new Date(goal.target_date) : undefined,
-      status: goal?.status || 'active',
     },
   });
 
@@ -79,10 +76,10 @@ export const GoalForm = ({ goal, onSubmit, onCancel }: GoalFormProps) => {
       description: values.description || null,
       category: values.category || null,
       target_metric: values.target_metric || null,
-      start_value: values.start_value ? parseFloat(values.start_value) : null,
-      target_value: values.target_value ? parseFloat(values.target_value) : null,
+      start_value: values.start_value ? parseFloat(values.start_value) : 0,
+      target_value: parseFloat(values.target_value),
       target_date: values.target_date ? format(values.target_date, 'yyyy-MM-dd') : null,
-      status: values.status,
+      status: goal?.status || 'active',
     });
 
     if (!goal) {
@@ -98,9 +95,9 @@ export const GoalForm = ({ goal, onSubmit, onCancel }: GoalFormProps) => {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>Goal Title</FormLabel>
               <FormControl>
-                <Input placeholder="Goal title" {...field} />
+                <Input placeholder="Enter your goal title" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -156,25 +153,39 @@ export const GoalForm = ({ goal, onSubmit, onCancel }: GoalFormProps) => {
 
           <FormField
             control={form.control}
-            name="status"
+            name="target_date"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-popover z-50">
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="achieved">Achieved</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
+              <FormItem className="flex flex-col">
+                <FormLabel>Target Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}
@@ -186,7 +197,7 @@ export const GoalForm = ({ goal, onSubmit, onCancel }: GoalFormProps) => {
           name="target_metric"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Target Metric</FormLabel>
+              <FormLabel>What are you measuring?</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., pounds, gallons, dollars" {...field} />
               </FormControl>
@@ -201,7 +212,7 @@ export const GoalForm = ({ goal, onSubmit, onCancel }: GoalFormProps) => {
             name="start_value"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Start Value</FormLabel>
+                <FormLabel>Starting Value</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.01" placeholder="0" {...field} />
                 </FormControl>
@@ -224,46 +235,6 @@ export const GoalForm = ({ goal, onSubmit, onCancel }: GoalFormProps) => {
             )}
           />
         </div>
-
-        <FormField
-          control={form.control}
-          name="target_date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Target Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full pl-3 text-left font-normal',
-                        !field.value && 'text-muted-foreground'
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, 'PPP')
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <div className="flex gap-2 pt-2">
           <Button type="submit" className="flex-1">
