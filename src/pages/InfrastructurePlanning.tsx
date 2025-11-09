@@ -483,31 +483,16 @@ export default function InfrastructurePlanning() {
         {/* Timeline Tab */}
         {activeTab === "timeline" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <SectionHeader title="Project Calendar" />
-              <div className="flex gap-2">
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="planned">Planned</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select defaultValue="month">
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="View" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="month">Month View</SelectItem>
-                    <SelectItem value="year">Year View</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <SectionHeader title="Project Calendar" />
+            
+            <FilterBar
+              searchPlaceholder="Search projects..."
+              onSearch={setSearchQuery}
+              statusOptions={statusOptions}
+              typeOptions={typeOptions}
+              onStatusChange={setStatusFilter}
+              onTypeChange={setTypeFilter}
+            />
 
             <Card>
               <CardHeader>
@@ -515,21 +500,84 @@ export default function InfrastructurePlanning() {
                   <Calendar className="h-5 w-5" />
                   Project Timeline
                 </CardTitle>
-                <CardDescription>Schedule and track your infrastructure projects</CardDescription>
+                <CardDescription>
+                  {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''} scheduled
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <EmptyState
-                  title="No scheduled projects"
-                  description="Add projects with start and end dates to see them on the calendar"
-                  icon={Calendar}
-                  action={
-                  <Button onClick={() => setIsModalOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Schedule Project
-                  </Button>
-                  }
-                  className="py-16"
-                />
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : filteredProjects.length === 0 ? (
+                  <EmptyState
+                    title="No scheduled projects"
+                    description="Add projects with planned completion dates to see them on the timeline"
+                    icon={Calendar}
+                    action={
+                      <Button onClick={() => setIsModalOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Schedule Project
+                      </Button>
+                    }
+                    className="py-16"
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {filteredProjects
+                      .filter((p) => p.planned_completion)
+                      .sort((a, b) => {
+                        const dateA = a.planned_completion ? new Date(a.planned_completion).getTime() : 0;
+                        const dateB = b.planned_completion ? new Date(b.planned_completion).getTime() : 0;
+                        return dateA - dateB;
+                      })
+                      .map((project) => (
+                        <Card key={project.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-lg">{project.name}</h4>
+                                <p className="text-sm text-muted-foreground capitalize">
+                                  {project.type.replace(/_/g, " ")}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-6">
+                                <div className="text-right">
+                                  <p className="text-sm font-medium capitalize">
+                                    {project.status.replace(/_/g, " ")}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">Status</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm font-medium capitalize">
+                                    {project.priority}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">Priority</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm font-medium">
+                                    {project.planned_completion
+                                      ? new Date(project.planned_completion).toLocaleDateString()
+                                      : "Not set"}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">Target Date</p>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    
+                    {filteredProjects.filter((p) => p.planned_completion).length === 0 && (
+                      <EmptyState
+                        title="No projects with scheduled dates"
+                        description="Add planned completion dates to your projects to see them here"
+                        icon={Calendar}
+                        className="py-12"
+                      />
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
