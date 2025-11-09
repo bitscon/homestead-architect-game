@@ -17,8 +17,10 @@ import {
   createBreedingEvent,
   updateBreedingEvent,
   deleteBreedingEvent,
+  getBreedingDashboardData,
   BreedingEvent,
 } from '@/features/breeding/api';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const BreedingTracker = () => {
   const { user } = useAuth();
@@ -39,6 +41,12 @@ const BreedingTracker = () => {
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['breeding-events', user?.id],
     queryFn: () => getBreedingEvents(user!.id),
+    enabled: !!user,
+  });
+
+  const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
+    queryKey: ['breeding-dashboard', user?.id],
+    queryFn: () => getBreedingDashboardData(user!.id),
     enabled: !!user,
   });
 
@@ -158,30 +166,41 @@ const BreedingTracker = () => {
         <div className="space-y-6">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <StatCard
-              title="Breeding Females"
-              value={0}
-              icon={Heart}
-              tone="neutral"
-            />
-            <StatCard
-              title="Pregnant"
-              value={pregnantCount}
-              icon={Activity}
-              tone="amber"
-            />
-            <StatCard
-              title="Lactating"
-              value={0}
-              icon={Heart}
-              tone="green"
-            />
-            <StatCard
-              title="Open"
-              value={0}
-              icon={Heart}
-              tone="blue"
-            />
+            {isDashboardLoading ? (
+              <>
+                <Skeleton className="h-[120px]" />
+                <Skeleton className="h-[120px]" />
+                <Skeleton className="h-[120px]" />
+                <Skeleton className="h-[120px]" />
+              </>
+            ) : (
+              <>
+                <StatCard
+                  title="Breeding Females"
+                  value={dashboardData?.breedingFemales ?? 0}
+                  icon={Heart}
+                  tone="neutral"
+                />
+                <StatCard
+                  title="Pregnant"
+                  value={dashboardData?.pregnant ?? 0}
+                  icon={Activity}
+                  tone="amber"
+                />
+                <StatCard
+                  title="Lactating"
+                  value={dashboardData?.lactating ?? 0}
+                  icon={Heart}
+                  tone="green"
+                />
+                <StatCard
+                  title="Open"
+                  value={dashboardData?.open ?? 0}
+                  icon={Heart}
+                  tone="blue"
+                />
+              </>
+            )}
           </div>
 
           {/* Active Pregnancies & Upcoming Events */}
