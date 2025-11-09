@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Topbar } from '@/components/Topbar';
 import { JournalEntryForm } from '@/features/journal/JournalEntryForm';
 import { JournalEntryList } from '@/features/journal/JournalEntryList';
 import {
@@ -118,67 +117,63 @@ const HomesteadJournal = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Topbar />
-      
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">
-              Homestead Journal
-            </h1>
-          </div>
-          <Button onClick={handleNewEntry}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Entry
-          </Button>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">
+            Homestead Journal
+          </h1>
         </div>
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              Journal Entries
-            </h2>
-            <JournalEntryList
-              entries={entries}
-              onEdit={handleEdit}
-              onDelete={(id) => deleteMutation.mutate(id)}
-              selectedEntry={selectedEntry}
-            />
-          </div>
+        <Button onClick={handleNewEntry}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Entry
+        </Button>
+      </div>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground mb-4">
+            Journal Entries
+          </h2>
+          <JournalEntryList
+            entries={entries}
+            onEdit={handleEdit}
+            onDelete={(id) => deleteMutation.mutate(id)}
+            selectedEntry={selectedEntry}
+          />
+        </div>
 
-          <div className="lg:sticky lg:top-24 h-fit">
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold text-foreground mb-4">
-                {selectedEntry ? 'Edit Entry' : 'New Entry'}
-              </h2>
-              {showForm ? (
-                <JournalEntryForm
-                  entry={selectedEntry}
-                  onSubmit={handleSubmit}
-                  onCancel={handleCancel}
-                />
-              ) : (
-                <div className="text-center py-12">
-                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">
-                    Select an entry to edit or create a new one
-                  </p>
-                  <Button onClick={handleNewEntry}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Entry
-                  </Button>
-                </div>
-              )}
-            </Card>
-          </div>
+        <div className="lg:sticky lg:top-24 h-fit">
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              {selectedEntry ? 'Edit Entry' : 'New Entry'}
+            </h2>
+            {showForm ? (
+              <JournalEntryForm
+                entry={selectedEntry}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+              />
+            ) : (
+              <div className="text-center py-12">
+                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  Select an entry to edit or create a new one
+                </p>
+                <Button onClick={handleNewEntry}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New Entry
+                </Button>
+              </div>
+            )}
+          </Card>
         </div>
       </div>
     </div>
