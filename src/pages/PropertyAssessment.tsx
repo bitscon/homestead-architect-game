@@ -148,7 +148,7 @@ export default function PropertyAssessment() {
         <Card>
           <CardHeader className="bg-muted/50 border-b">
             <CardTitle className="text-lg font-semibold">
-              Property Details
+              {selectedProperty ? 'Property Details' : 'Select a property to view details'}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -180,14 +180,59 @@ export default function PropertyAssessment() {
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">
                       Climate Zone
                     </h3>
-                    <Badge variant="secondary">{selectedProperty.climate_zone}</Badge>
+                    <Badge variant="secondary">{selectedProperty.climate_zone.replace('zone_', 'Zone ')}</Badge>
+                  </div>
+                )}
+                {selectedProperty.soil_ph && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                      Soil pH
+                    </h3>
+                    <p className="text-base">{selectedProperty.soil_ph}</p>
+                  </div>
+                )}
+                {selectedProperty.soil_type && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                      Soil Type
+                    </h3>
+                    <p className="text-base capitalize">{selectedProperty.soil_type}</p>
+                  </div>
+                )}
+                {selectedProperty.sun_exposure && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                      Sun Exposure
+                    </h3>
+                    <p className="text-base capitalize">{selectedProperty.sun_exposure.replace('_', ' ')}</p>
+                  </div>
+                )}
+                {selectedProperty.water_sources && selectedProperty.water_sources.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                      Water Sources
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProperty.water_sources.map((source, idx) => (
+                        <Badge key={idx} variant="outline">{source}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedProperty.annual_rainfall && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                      Annual Rainfall
+                    </h3>
+                    <p className="text-base">{selectedProperty.annual_rainfall} inches</p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-sm">Select a property to view details</p>
+                <p className="text-sm font-medium mb-1">Select a property to view details</p>
+                <p className="text-xs">Click on a property below to see full details</p>
               </div>
             )}
           </CardContent>
@@ -211,8 +256,8 @@ export default function PropertyAssessment() {
           ) : properties.length === 0 ? (
             <EmptyState
               icon={MapPin}
-              title="No properties yet"
-              description="Add your first property to start mapping your homestead"
+              title="No properties added yet"
+              description="Start by adding your first property for assessment"
               action={
                 <Button onClick={handleNewProperty}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -225,13 +270,20 @@ export default function PropertyAssessment() {
               {properties.map((property) => (
                 <div
                   key={property.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  className={`flex items-center justify-between p-4 rounded-lg border transition-colors cursor-pointer ${
+                    selectedProperty?.id === property.id
+                      ? 'bg-primary/5 border-primary'
+                      : 'bg-card hover:bg-accent/50'
+                  }`}
+                  onClick={() => handleEditProperty(property)}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="font-medium text-lg">{property.name}</h3>
                       {property.climate_zone && (
-                        <Badge variant="secondary">{property.climate_zone}</Badge>
+                        <Badge variant="secondary">
+                          {property.climate_zone.replace('zone_', 'Zone ')}
+                        </Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -244,22 +296,16 @@ export default function PropertyAssessment() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditProperty(property)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(property.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant={selectedProperty?.id === property.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditProperty(property);
+                    }}
+                  >
+                    View
+                  </Button>
                 </div>
               ))}
             </div>
