@@ -32,7 +32,7 @@ const propertySchema = z.object({
   soil_ph: z.coerce.number().min(0).max(14).optional().or(z.literal('')),
   sun_exposure: z.string().optional().or(z.literal('')),
   annual_rainfall: z.coerce.number().min(0).optional().or(z.literal('')),
-  water_sources: z.string().trim().max(500, 'Water sources must be less than 500 characters').optional().or(z.literal('')),
+  water_sources_text: z.string().trim().max(500, 'Water sources must be less than 500 characters').optional().or(z.literal('')),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -57,12 +57,18 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
       soil_ph: property?.soil_ph || undefined,
       sun_exposure: property?.sun_exposure || '',
       annual_rainfall: property?.annual_rainfall || undefined,
-      water_sources: property?.water_sources || '',
+      water_sources_text: property?.water_sources?.join(', ') || '',
     },
   });
 
   const handleSubmit = async (values: PropertyFormValues) => {
     try {
+      // Convert comma-separated string to array
+      const waterSourcesArray = values.water_sources_text
+        ?.split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0) || null;
+
       await onSubmit({
         name: values.name.trim(),
         size_acres: values.size_acres,
@@ -72,7 +78,7 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
         soil_ph: values.soil_ph || null,
         sun_exposure: values.sun_exposure || null,
         annual_rainfall: values.annual_rainfall || null,
-        water_sources: values.water_sources?.trim() || null,
+        water_sources: waterSourcesArray,
       });
       if (!property) {
         form.reset();
@@ -86,12 +92,12 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
   const handleAddWaterSource = () => {
     if (!waterSource.trim()) return;
     
-    const currentSources = form.getValues('water_sources');
+    const currentSources = form.getValues('water_sources_text');
     const newSources = currentSources 
       ? `${currentSources}, ${waterSource.trim()}`
       : waterSource.trim();
     
-    form.setValue('water_sources', newSources);
+    form.setValue('water_sources_text', newSources);
     setWaterSource('');
   };
 
@@ -267,7 +273,7 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
 
         <FormField
           control={form.control}
-          name="water_sources"
+          name="water_sources_text"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Water Sources</FormLabel>

@@ -11,8 +11,9 @@ export interface Property {
   soil_ph?: number | null;
   sun_exposure?: string | null;
   annual_rainfall?: number | null;
-  water_sources?: string | null;
+  water_sources?: string[] | null;
   created_at: string;
+  updated_at: string;
 }
 
 export interface PropertyInsert {
@@ -24,7 +25,7 @@ export interface PropertyInsert {
   soil_ph?: number | null;
   sun_exposure?: string | null;
   annual_rainfall?: number | null;
-  water_sources?: string | null;
+  water_sources?: string[] | null;
 }
 
 export interface PropertyUpdate {
@@ -36,7 +37,7 @@ export interface PropertyUpdate {
   soil_ph?: number | null;
   sun_exposure?: string | null;
   annual_rainfall?: number | null;
-  water_sources?: string | null;
+  water_sources?: string[] | null;
 }
 
 export async function getProperties(userId: string) {
@@ -50,16 +51,16 @@ export async function getProperties(userId: string) {
   return data as Property[];
 }
 
-export async function getProperty(id: string, userId: string) {
+export async function getPropertyById(id: string, userId: string) {
   const { data, error } = await (supabase as any)
     .from('properties')
     .select('*')
     .eq('id', id)
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
-  return data as Property;
+  return data as Property | null;
 }
 
 export async function createProperty(userId: string, property: PropertyInsert) {
