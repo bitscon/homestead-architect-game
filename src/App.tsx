@@ -20,6 +20,7 @@ import HomesteadGoals from "./pages/HomesteadGoals";
 import CropPlanner from "./pages/CropPlanner";
 import Infrastructure from "./pages/Infrastructure";
 import BreedingTracker from "./pages/BreedingTracker";
+import StrategicPlanningHub from "./pages/StrategicPlanningHub";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -153,6 +154,16 @@ const App = () => (
                 <ProtectedRoute>
                   <ProtectedLayout>
                     <BreedingTracker />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/strategic-planner" 
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <StrategicPlanningHub />
                   </ProtectedLayout>
                 </ProtectedRoute>
               } 
