@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatCard, EmptyState } from "@/components/ui";
-import { Plus, DollarSign, ClipboardList, Building2 } from "lucide-react";
+import { FilterBar } from "@/components/ui/FilterBar";
+import { Plus, DollarSign, ClipboardList, Building2, Pencil, Lightbulb } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -22,6 +23,14 @@ export default function Infrastructure() {
   const [projects, setProjects] = useState<InfrastructureProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<InfrastructureProject | null>(null);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  
   const { user } = useAuth();
 
   useEffect(() => {
@@ -92,6 +101,29 @@ export default function Infrastructure() {
 
   const formatStatus = (status: string) => {
     return status.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const formatType = (type: string) => {
+    return type.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  // Filter projects based on search, status, and type
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchesSearch = searchQuery === "" || 
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.type.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = statusFilter === "all" || project.status === statusFilter;
+      const matchesType = typeFilter === "all" || project.type === typeFilter;
+      
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [projects, searchQuery, statusFilter, typeFilter]);
+
+  const handleEditProject = (project: InfrastructureProject) => {
+    setEditingProject(project);
+    setIsModalOpen(true);
   };
 
   return (
@@ -250,14 +282,141 @@ export default function Infrastructure() {
         </TabsContent>
 
         <TabsContent value="planner" className="space-y-6 mt-6">
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-semibold text-card-foreground mb-4">
-              Project Planner
-            </h2>
-            <p className="text-muted-foreground">
-              Project planner content will go here
-            </p>
-          </div>
+          {/* Planning Tips Card */}
+          <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <CardTitle className="text-lg font-semibold text-amber-900 dark:text-amber-100">
+                  Planning Tips
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/50 dark:bg-black/20">
+                <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800">
+                  High
+                </Badge>
+                <span className="text-sm text-amber-900 dark:text-amber-100">
+                  Start with Essential Infrastructure
+                </span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/50 dark:bg-black/20">
+                <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800">
+                  Medium
+                </Badge>
+                <span className="text-sm text-amber-900 dark:text-amber-100">
+                  Plan for Seasonal Needs
+                </span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/50 dark:bg-black/20">
+                <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800">
+                  Medium
+                </Badge>
+                <span className="text-sm text-amber-900 dark:text-amber-100">
+                  Think Multi-Purpose
+                </span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/50 dark:bg-black/20">
+                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                  Low
+                </Badge>
+                <span className="text-sm text-amber-900 dark:text-amber-100">
+                  Consider Maintenance Access
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Filter Bar */}
+          <FilterBar
+            searchPlaceholder="Search projects..."
+            onSearch={setSearchQuery}
+            statusOptions={[
+              { value: "all", label: "All Status" },
+              { value: "planned", label: "Planned" },
+              { value: "in_progress", label: "In Progress" },
+              { value: "completed", label: "Completed" },
+            ]}
+            typeOptions={[
+              { value: "all", label: "All Types" },
+              { value: "greenhouse", label: "Greenhouse" },
+              { value: "barn", label: "Barn" },
+              { value: "shed", label: "Shed" },
+              { value: "fence", label: "Fence" },
+              { value: "water_system", label: "Water System" },
+              { value: "other", label: "Other" },
+            ]}
+            onStatusChange={setStatusFilter}
+            onTypeChange={setTypeFilter}
+            onViewChange={setViewMode}
+            showViewToggle={true}
+          />
+
+          {/* Projects List */}
+          <Card>
+            <CardHeader className="bg-muted/50 border-b">
+              <CardTitle className="text-lg font-semibold">
+                Infrastructure Projects ({filteredProjects.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : filteredProjects.length === 0 ? (
+                <EmptyState
+                  icon={Building2}
+                  title="No projects match your filters"
+                  description="Try adjusting your search or filter criteria"
+                />
+              ) : (
+                <div className="space-y-4">
+                  {filteredProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-medium text-lg">{project.name}</h3>
+                          <Badge variant={getStatusBadgeVariant(project.status)}>
+                            {formatStatus(project.status)}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="capitalize font-medium">
+                            {formatType(project.type)}
+                          </span>
+                          {project.estimated_cost && (
+                            <span className="font-semibold">
+                              ${project.estimated_cost.toLocaleString()}
+                            </span>
+                          )}
+                          {project.planned_completion && (
+                            <span>
+                              Due: {format(new Date(project.planned_completion), "MMM d, yyyy")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditProject(project)}
+                      >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="estimator" className="space-y-6 mt-6">
@@ -286,7 +445,10 @@ export default function Infrastructure() {
       {/* Infrastructure Modal */}
       <InfrastructureModal
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingProject(null);
+        }}
         onSubmit={handleCreateProject}
       />
     </div>
