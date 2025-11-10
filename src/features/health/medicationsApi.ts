@@ -74,10 +74,18 @@ export async function updateMedication(id: string, medication: Partial<Medicatio
 }
 
 export async function deleteMedication(id: string) {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be authenticated to delete a medication');
+  }
+
   const { error } = await (supabase as any)
     .from('medications')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw error;
 }
