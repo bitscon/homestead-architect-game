@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { AnimalForm } from '@/features/animals/AnimalForm';
-import { AnimalList } from '@/features/animals/AnimalList';
+import { AnimalForm } from '@/features/health/AnimalForm';
 import {
   getAnimals,
   createAnimal,
@@ -12,12 +11,15 @@ import {
 } from '@/features/animals/api';
 import { getProperties, Property } from '@/features/properties/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { TabHeader } from '@/components/ui/TabHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, Settings, Edit2, Trash2, Bird } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function HealthHub() {
   const { user } = useAuth();
@@ -25,7 +27,7 @@ export default function HealthHub() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<string>('all');
   const [activeTab, setActiveTab] = useState('animals');
@@ -58,43 +60,30 @@ export default function HealthHub() {
     }
   };
 
-  const handleCreate = async (data: AnimalInsert) => {
+  const handleSubmit = async (data: AnimalInsert) => {
     if (!user?.id) return;
 
     try {
-      const newAnimal = await createAnimal(user.id, data);
-      setAnimals([newAnimal, ...animals]);
-      setIsCreating(false);
-      setSelectedAnimal(newAnimal);
-      toast({
-        title: 'Success',
-        description: 'Animal added successfully',
-      });
+      if (selectedAnimal) {
+        const updated = await updateAnimal(selectedAnimal.id, user.id, data);
+        setAnimals(animals.map((a) => (a.id === updated.id ? updated : a)));
+        toast({
+          title: 'Success',
+          description: 'Animal updated successfully',
+        });
+      } else {
+        const newAnimal = await createAnimal(user.id, data);
+        setAnimals([newAnimal, ...animals]);
+        toast({
+          title: 'Success',
+          description: 'Animal added successfully',
+        });
+      }
+      setSelectedAnimal(null);
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to add animal',
-        variant: 'destructive',
-      });
-      throw error;
-    }
-  };
-
-  const handleUpdate = async (data: AnimalInsert) => {
-    if (!user?.id || !selectedAnimal) return;
-
-    try {
-      const updated = await updateAnimal(selectedAnimal.id, user.id, data);
-      setAnimals(animals.map((a) => (a.id === updated.id ? updated : a)));
-      setSelectedAnimal(updated);
-      toast({
-        title: 'Success',
-        description: 'Animal updated successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update animal',
+        description: `Failed to ${selectedAnimal ? 'update' : 'add'} animal`,
         variant: 'destructive',
       });
       throw error;
@@ -180,64 +169,105 @@ export default function HealthHub() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
 
-          <TabsContent value="animals" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Animal List */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Animals</CardTitle>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setIsCreating(true);
-                        setSelectedAnimal(null);
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <AnimalList
-                    animals={animals}
-                    selectedId={selectedAnimal?.id}
-                    onSelect={(animal) => {
-                      setSelectedAnimal(animal);
-                      setIsCreating(false);
+          <TabsContent value="animals">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Animal Registry</CardTitle>
+                  <Button
+                    onClick={() => {
+                      setSelectedAnimal(null);
+                      setFormOpen(true);
                     }}
-                    onDelete={handleDelete}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Animal
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {animals.length === 0 ? (
+                  <EmptyState
+                    icon={Bird}
+                    title="No animals yet"
+                    description="Start building your animal registry by adding your first animal."
+                    action={
+                      <Button onClick={() => setFormOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Your First Animal
+                      </Button>
+                    }
                   />
-                </CardContent>
-              </Card>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Breed</TableHead>
+                        <TableHead>Birth Date</TableHead>
+                        <TableHead>Property</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {animals
+                        .filter((animal) => 
+                          selectedProperty === 'all' || animal.property_id === selectedProperty
+                        )
+                        .map((animal) => (
+                          <TableRow key={animal.id}>
+                            <TableCell className="font-medium">{animal.name}</TableCell>
+                            <TableCell>{animal.type}</TableCell>
+                            <TableCell>{animal.breed || '—'}</TableCell>
+                            <TableCell>
+                              {animal.birth_date 
+                                ? format(new Date(animal.birth_date), 'MMM d, yyyy')
+                                : '—'
+                              }
+                            </TableCell>
+                            <TableCell>
+                              {properties.find((p) => p.id === animal.property_id)?.name || '—'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setSelectedAnimal(animal);
+                                    setFormOpen(true);
+                                  }}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDelete(animal.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
 
-              {/* Animal Form */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>
-                    {isCreating ? 'Add Animal' : selectedAnimal ? 'Edit Animal' : 'Animal Details'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isCreating || selectedAnimal ? (
-                    <AnimalForm
-                      animal={selectedAnimal || undefined}
-                      properties={properties}
-                      onSubmit={isCreating ? handleCreate : handleUpdate}
-                      onCancel={() => {
-                        setIsCreating(false);
-                        setSelectedAnimal(null);
-                      }}
-                    />
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <p>Select an animal to view details or add a new one.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+            <AnimalForm
+              open={formOpen}
+              onOpenChange={(open) => {
+                setFormOpen(open);
+                if (!open) setSelectedAnimal(null);
+              }}
+              animal={selectedAnimal || undefined}
+              properties={properties}
+              onSubmit={handleSubmit}
+            />
           </TabsContent>
 
           <TabsContent value="family-tree">
