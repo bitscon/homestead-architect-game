@@ -9,6 +9,7 @@ export interface InventoryItem {
   unit: string;
   reorder_point: number;
   supplier: string | null;
+  notes: string | null;
   created_at: string;
 }
 
@@ -19,6 +20,7 @@ export interface InventoryItemInsert {
   unit: string;
   reorder_point: number;
   supplier?: string | null;
+  notes?: string | null;
 }
 
 export interface InventoryItemUpdate {
@@ -28,6 +30,7 @@ export interface InventoryItemUpdate {
   unit?: string;
   reorder_point?: number;
   supplier?: string | null;
+  notes?: string | null;
 }
 
 export async function getInventory(userId: string) {
