@@ -18,7 +18,7 @@ import HomesteadBalance from "./pages/HomesteadBalance";
 import HomesteadJournal from "./pages/HomesteadJournal";
 import HomesteadGoals from "./pages/HomesteadGoals";
 import CropPlanner from "./pages/CropPlanner";
-import InfrastructurePlanning from "./pages/InfrastructurePlanning";
+import Infrastructure from "./pages/Infrastructure";
 import BreedingTracker from "./pages/BreedingTracker";
 import NotFound from "./pages/NotFound";
 
@@ -142,7 +142,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ProtectedLayout>
-                    <InfrastructurePlanning />
+                    <Infrastructure />
                   </ProtectedLayout>
                 </ProtectedRoute>
               } 
