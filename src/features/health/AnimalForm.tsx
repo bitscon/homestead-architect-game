@@ -14,6 +14,7 @@ const animalSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   type: z.string().trim().min(1, 'Type is required').max(50, 'Type must be less than 50 characters'),
   breed: z.string().trim().max(100, 'Breed must be less than 100 characters').optional().nullable(),
+  weight_lbs: z.number().positive('Weight must be positive').optional().nullable(),
   birth_date: z.string().optional().nullable(),
   gender: z.string().optional().nullable(),
   property_id: z.string().optional().nullable(),
@@ -37,6 +38,7 @@ export function AnimalForm({ open, onOpenChange, animal, properties, onSubmit }:
       name: animal?.name || '',
       type: animal?.type || '',
       breed: animal?.breed || '',
+      weight_lbs: animal?.weight_lbs || null,
       birth_date: animal?.birth_date || '',
       gender: animal?.gender || '',
       property_id: animal?.property_id || '',
@@ -50,6 +52,7 @@ export function AnimalForm({ open, onOpenChange, animal, properties, onSubmit }:
         name: data.name,
         type: data.type,
         breed: data.breed || null,
+        weight_lbs: data.weight_lbs || null,
         birth_date: data.birth_date || null,
         gender: data.gender || null,
         property_id: data.property_id || null,
@@ -108,6 +111,27 @@ export function AnimalForm({ open, onOpenChange, animal, properties, onSubmit }:
                     <FormLabel>Breed</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter breed" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="weight_lbs"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Weight (lbs)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        step="0.1"
+                        placeholder="Enter weight" 
+                        {...field} 
+                        value={field.value || ''} 
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

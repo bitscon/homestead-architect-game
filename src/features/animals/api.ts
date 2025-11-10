@@ -12,6 +12,7 @@ export interface Animal {
   breeding_status: string | null;
   notes: string | null;
   property_id: string | null;
+  photo_url?: string | null;
   created_at?: string;
 }
 
@@ -25,6 +26,7 @@ export interface AnimalInsert {
   breeding_status?: string | null;
   notes?: string | null;
   property_id?: string | null;
+  photo_url?: string | null;
 }
 
 export interface AnimalUpdate {
@@ -37,6 +39,7 @@ export interface AnimalUpdate {
   breeding_status?: string | null;
   notes?: string | null;
   property_id?: string | null;
+  photo_url?: string | null;
 }
 
 export async function getAnimals(userId: string, propertyId?: string) {
