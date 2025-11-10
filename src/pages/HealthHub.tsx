@@ -12,10 +12,12 @@ import {
 } from '@/features/animals/api';
 import { getProperties, Property } from '@/features/properties/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { TabHeader } from '@/components/ui/TabHeader';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 
 export default function HealthHub() {
   const { user } = useAuth();
@@ -25,6 +27,8 @@ export default function HealthHub() {
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedProperty, setSelectedProperty] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState('animals');
 
   useEffect(() => {
     if (user?.id) {
@@ -129,21 +133,52 @@ export default function HealthHub() {
     );
   }
 
+  const tabs = [
+    { id: 'animals', label: 'Animals' },
+    { id: 'family-tree', label: 'Family Tree' },
+    { id: 'grooming', label: 'Grooming' },
+    { id: 'medications', label: 'Medications' },
+    { id: 'dosage', label: 'Dosage' },
+    { id: 'library', label: 'Library' },
+    { id: 'care', label: 'Care' },
+  ];
+
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen p-6" style={{ backgroundColor: 'hsl(var(--health-hub-bg))' }}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Health Hub</h1>
-          <p className="text-muted-foreground mt-1">Manage animal health and wellness</p>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Health Hub</h1>
+              <p className="text-muted-foreground mt-1">Manage your animals' health and medications</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select property" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Properties</SelectItem>
+                  {properties.map((property) => (
+                    <SelectItem key={property.id} value={property.id}>
+                      {property.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline">
+                <Settings className="h-4 w-4 mr-2" />
+                Manage Types
+              </Button>
+            </div>
+          </div>
+
+          {/* Tab Header */}
+          <TabHeader tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
 
-        <Tabs defaultValue="animals" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="animals">Animals</TabsTrigger>
-            <TabsTrigger value="medications">Medications</TabsTrigger>
-            <TabsTrigger value="health-library">Health Library</TabsTrigger>
-            <TabsTrigger value="grooming">Grooming</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
 
           <TabsContent value="animals" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -205,27 +240,14 @@ export default function HealthHub() {
             </div>
           </TabsContent>
 
-          <TabsContent value="medications">
+          <TabsContent value="family-tree">
             <Card>
               <CardHeader>
-                <CardTitle>Medications</CardTitle>
+                <CardTitle>Family Tree</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12 text-muted-foreground">
-                  <p>Medication tracking coming soon...</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="health-library">
-            <Card>
-              <CardHeader>
-                <CardTitle>Health Library</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>Health resources coming soon...</p>
+                  <p>Family tree visualization coming soon...</p>
                 </div>
               </CardContent>
             </Card>
@@ -239,6 +261,58 @@ export default function HealthHub() {
               <CardContent>
                 <div className="text-center py-12 text-muted-foreground">
                   <p>Grooming schedule coming soon...</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="medications">
+            <Card>
+              <CardHeader>
+                <CardTitle>Medications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>Medication tracking coming soon...</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="dosage">
+            <Card>
+              <CardHeader>
+                <CardTitle>Dosage Calculator</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>Dosage calculator coming soon...</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="library">
+            <Card>
+              <CardHeader>
+                <CardTitle>Health Library</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>Health resources coming soon...</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="care">
+            <Card>
+              <CardHeader>
+                <CardTitle>Care Schedule</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>Care schedule coming soon...</p>
                 </div>
               </CardContent>
             </Card>
