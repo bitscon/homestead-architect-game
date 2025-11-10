@@ -7,6 +7,11 @@ export interface Property {
   size_acres: number;
   location: string;
   climate_zone?: string | null;
+  soil_type?: string | null;
+  soil_ph?: number | null;
+  sun_exposure?: string | null;
+  annual_rainfall?: number | null;
+  water_sources?: string | null;
   created_at: string;
 }
 
@@ -15,6 +20,11 @@ export interface PropertyInsert {
   size_acres: number;
   location: string;
   climate_zone?: string | null;
+  soil_type?: string | null;
+  soil_ph?: number | null;
+  sun_exposure?: string | null;
+  annual_rainfall?: number | null;
+  water_sources?: string | null;
 }
 
 export interface PropertyUpdate {
@@ -22,6 +32,11 @@ export interface PropertyUpdate {
   size_acres?: number;
   location?: string;
   climate_zone?: string | null;
+  soil_type?: string | null;
+  soil_ph?: number | null;
+  sun_exposure?: string | null;
+  annual_rainfall?: number | null;
+  water_sources?: string | null;
 }
 
 export async function getProperties(userId: string) {
