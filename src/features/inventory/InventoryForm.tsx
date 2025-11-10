@@ -19,15 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { InventoryItem, InventoryItemInsert } from './api';
 
 const inventorySchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200),
-  category: z.string().min(1, 'Category is required'),
+  name: z.string().trim().min(1, 'Name is required').max(200, 'Name must be less than 200 characters'),
+  category: z.string().trim().min(1, 'Category is required').max(100, 'Category must be less than 100 characters'),
   current_stock: z.coerce.number().min(0, 'Stock cannot be negative'),
-  unit: z.string().min(1, 'Unit is required'),
+  unit: z.string().trim().min(1, 'Unit is required').max(50, 'Unit must be less than 50 characters'),
   reorder_point: z.coerce.number().min(0, 'Reorder point cannot be negative'),
-  supplier: z.string().max(200).optional(),
+  supplier: z.string().trim().max(200, 'Supplier must be less than 200 characters').optional().or(z.literal('')),
+  notes: z.string().trim().max(1000, 'Notes must be less than 1000 characters').optional().or(z.literal('')),
 });
 
 type InventoryFormValues = z.infer<typeof inventorySchema>;
@@ -72,18 +74,20 @@ export function InventoryForm({ item, onSubmit, onCancel }: InventoryFormProps) 
       unit: item?.unit || '',
       reorder_point: item?.reorder_point || 0,
       supplier: item?.supplier || '',
+      notes: item?.notes || '',
     },
   });
 
   const handleSubmit = async (values: InventoryFormValues) => {
     try {
       await onSubmit({
-        name: values.name,
-        category: values.category,
+        name: values.name.trim(),
+        category: values.category.trim(),
         current_stock: values.current_stock,
-        unit: values.unit,
+        unit: values.unit.trim(),
         reorder_point: values.reorder_point,
-        supplier: values.supplier || null,
+        supplier: values.supplier?.trim() || null,
+        notes: values.notes?.trim() || null,
       });
       if (!item) {
         form.reset();
@@ -123,7 +127,7 @@ export function InventoryForm({ item, onSubmit, onCancel }: InventoryFormProps) 
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-background">
                     {CATEGORIES.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
@@ -148,7 +152,7 @@ export function InventoryForm({ item, onSubmit, onCancel }: InventoryFormProps) 
                       <SelectValue placeholder="Select unit" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-background">
                     {UNITS.map((unit) => (
                       <SelectItem key={unit} value={unit}>
                         {unit}
@@ -202,6 +206,28 @@ export function InventoryForm({ item, onSubmit, onCancel }: InventoryFormProps) 
               <FormControl>
                 <Input placeholder="e.g., Local Feed Store" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes (Optional)</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Additional information about this item..."
+                  className="resize-none"
+                  rows={4}
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Any additional details or special instructions
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
