@@ -5,7 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatCard, EmptyState } from "@/components/ui";
 import { FilterBar } from "@/components/ui/FilterBar";
-import { Plus, DollarSign, ClipboardList, Building2, Pencil, Lightbulb } from "lucide-react";
+import { Plus, DollarSign, ClipboardList, Building2, Pencil, Lightbulb, Calculator, TrendingUp } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -124,6 +133,66 @@ export default function Infrastructure() {
   const handleEditProject = (project: InfrastructureProject) => {
     setEditingProject(project);
     setIsModalOpen(true);
+  };
+
+  // Cost calculations
+  const totalBudgetCalc = projects.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+  const plannedBudget = projects.filter(p => p.status === "planned").reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+  const inProgressBudget = projects.filter(p => p.status === "in_progress").reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+  const completedBudget = projects.filter(p => p.status === "completed").reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+  
+  const plannedPercent = totalBudgetCalc > 0 ? Math.round((plannedBudget / totalBudgetCalc) * 100) : 0;
+  const inProgressPercent = totalBudgetCalc > 0 ? Math.round((inProgressBudget / totalBudgetCalc) * 100) : 0;
+  const completedPercent = totalBudgetCalc > 0 ? Math.round((completedBudget / totalBudgetCalc) * 100) : 0;
+
+  // Group by type
+  const costByType = useMemo(() => {
+    const grouped = projects.reduce((acc, project) => {
+      const type = project.type;
+      if (!acc[type]) {
+        acc[type] = 0;
+      }
+      acc[type] += project.estimated_cost || 0;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(grouped)
+      .map(([type, cost]) => ({ type, cost }))
+      .sort((a, b) => b.cost - a.cost);
+  }, [projects]);
+
+  // Group by priority
+  const budgetByPriority = useMemo(() => {
+    const grouped = projects.reduce((acc, project) => {
+      const priority = project.priority;
+      if (!acc[priority]) {
+        acc[priority] = 0;
+      }
+      acc[priority] += project.estimated_cost || 0;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(grouped)
+      .map(([priority, cost]) => ({ priority, cost }))
+      .sort((a, b) => {
+        const order = { urgent: 0, high: 1, medium: 2, low: 3 };
+        return order[a.priority as keyof typeof order] - order[b.priority as keyof typeof order];
+      });
+  }, [projects]);
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "urgent":
+        return "bg-red-500";
+      case "high":
+        return "bg-orange-500";
+      case "medium":
+        return "bg-yellow-500";
+      case "low":
+        return "bg-blue-500";
+      default:
+        return "bg-gray-500";
+    }
   };
 
   return (
@@ -420,14 +489,204 @@ export default function Infrastructure() {
         </TabsContent>
 
         <TabsContent value="estimator" className="space-y-6 mt-6">
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-semibold text-card-foreground mb-4">
-              Cost Estimator
+          {/* Section Title */}
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight mb-4">
+              Cost Analysis & Budgeting
             </h2>
-            <p className="text-muted-foreground">
-              Cost estimator content will go here
-            </p>
           </div>
+
+          {/* Budget Overview Cards */}
+          {isLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 rounded-lg border bg-card animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title="Total Budget"
+                value={`$${totalBudgetCalc.toLocaleString()}`}
+                icon={DollarSign}
+                tone="neutral"
+                description="All projects"
+              />
+              <StatCard
+                title="Planned"
+                value={`$${plannedBudget.toLocaleString()}`}
+                icon={ClipboardList}
+                tone="blue"
+                description={`${plannedPercent}% of budget`}
+              />
+              <StatCard
+                title="In Progress"
+                value={`$${inProgressBudget.toLocaleString()}`}
+                icon={Building2}
+                tone="amber"
+                description={`${inProgressPercent}% of budget`}
+              />
+              <StatCard
+                title="Completed"
+                value={`$${completedBudget.toLocaleString()}`}
+                icon={TrendingUp}
+                tone="green"
+                description={`${completedPercent}% of budget`}
+              />
+            </div>
+          )}
+
+          {/* Budget Progress */}
+          <Card>
+            <CardHeader className="bg-muted/50 border-b">
+              <CardTitle className="text-lg font-semibold">
+                Budget Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Completed Projects</span>
+                  <span className="text-muted-foreground">
+                    ${completedBudget.toLocaleString()} / ${totalBudgetCalc.toLocaleString()}
+                  </span>
+                </div>
+                <Progress value={completedPercent} className="h-2" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Active Projects</span>
+                  <span className="text-muted-foreground">
+                    ${inProgressBudget.toLocaleString()}
+                  </span>
+                </div>
+                <Progress value={inProgressPercent} className="h-2 [&>div]:bg-amber-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cost Breakdowns */}
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Cost by Type */}
+            <Card>
+              <CardHeader className="bg-muted/50 border-b">
+                <CardTitle className="text-lg font-semibold">
+                  Cost by Infrastructure Type
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {costByType.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No cost data available
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {costByType.map(({ type, cost }) => (
+                      <div key={type} className="flex items-center justify-between">
+                        <span className="text-sm font-medium capitalize">
+                          {formatType(type)}
+                        </span>
+                        <span className="text-sm font-semibold">
+                          ${cost.toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Budget by Priority */}
+            <Card>
+              <CardHeader className="bg-muted/50 border-b">
+                <CardTitle className="text-lg font-semibold">
+                  Budget by Priority
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {budgetByPriority.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No budget data available
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {budgetByPriority.map(({ priority, cost }) => (
+                      <div key={priority} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${getPriorityColor(priority)}`} />
+                          <span className="text-sm font-medium capitalize">
+                            {priority}
+                          </span>
+                        </div>
+                        <span className="text-sm font-semibold">
+                          ${cost.toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Detailed Cost Breakdown */}
+          <Card>
+            <CardHeader className="bg-muted/50 border-b">
+              <CardTitle className="text-lg font-semibold">
+                Detailed Cost Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : projects.length === 0 ? (
+                <EmptyState
+                  icon={Calculator}
+                  title="No projects to estimate"
+                  description="Add infrastructure projects to see cost breakdowns"
+                  action={
+                    <Button onClick={() => setIsModalOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Project
+                    </Button>
+                  }
+                />
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Project Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Estimated Cost</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {projects.map((project) => (
+                        <TableRow key={project.id}>
+                          <TableCell className="font-medium">{project.name}</TableCell>
+                          <TableCell className="capitalize">{formatType(project.type)}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(project.status)}>
+                              {formatStatus(project.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            ${(project.estimated_cost || 0).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="timeline" className="space-y-6 mt-6">
