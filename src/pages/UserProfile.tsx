@@ -6,13 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StatCard } from "@/components/ui/StatCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, User as UserIcon, CreditCard } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 
@@ -206,26 +208,27 @@ const UserProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Your Profile</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your account, profile, and subscription
-        </p>
-      </div>
+    <div className="container mx-auto p-6">
+      <SectionHeader 
+        title="Your Profile" 
+        subtitle="Manage your account, profile, and subscription"
+        icon={UserIcon}
+        className="mb-6"
+      />
 
       {/* Mobile-first responsive grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         {/* Main content - takes 2 columns on desktop */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-6">
           {/* Profile not found alert */}
           {!profile && (
             <Alert>
@@ -464,27 +467,14 @@ const UserProfile = () => {
 
         {/* Sidebar - takes 1 column on desktop */}
         <div className="space-y-6">
-          {/* Subscription Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Subscription</CardTitle>
-              <CardDescription>
-                Manage your plan
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Current Plan</p>
-                <p className="text-2xl font-bold">Free</p>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Access to all basic homestead management features
-              </p>
-              <Button className="w-full" variant="outline" disabled>
-                Upgrade Plan
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Subscription Stats */}
+          <StatCard
+            title="Current Plan"
+            value={profile?.plan_type || 'Free'}
+            icon={CreditCard}
+            tone="blue"
+            description="Access to basic homestead features"
+          />
 
           {/* Quick Stats Card */}
           <Card>
@@ -507,6 +497,24 @@ const UserProfile = () => {
                 <span className="text-sm text-muted-foreground">Last Login</span>
                 <span className="text-sm font-medium">Today</span>
               </div>
+            </CardContent>
+          </Card>
+          
+          {/* Upgrade Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Upgrade</CardTitle>
+              <CardDescription>
+                Unlock more features
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Upgrade to access advanced planning tools and unlimited storage
+              </p>
+              <Button className="w-full" variant="default" disabled>
+                Upgrade Plan
+              </Button>
             </CardContent>
           </Card>
         </div>
