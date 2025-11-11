@@ -139,12 +139,23 @@ const UserProfile = () => {
     try {
       setIsSaving(true);
       
+      // Fetch existing profile first to preserve subscription and role fields
+      const { data: existingProfile, error: fetchError } = await (supabase as any)
+        .from('profiles')
+        .select('subscription_status, plan_type, trial_start_date, trial_end_date')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (fetchError) throw fetchError;
+      
       // Parse full name into first and last name
       const nameParts = data.full_name.trim().split(/\s+/);
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
       
+      // Build the profile data, only updating editable fields
       const profileData = {
+        id: user.id,
         first_name: firstName,
         last_name: lastName,
         display_name: data.display_name?.trim() || null,
@@ -152,15 +163,19 @@ const UserProfile = () => {
         website_url: data.website_url?.trim() || null,
         bio: data.bio?.trim() || null,
         updated_at: new Date().toISOString(),
+        // Preserve existing subscription fields if they exist
+        ...(existingProfile && {
+          subscription_status: existingProfile.subscription_status,
+          plan_type: existingProfile.plan_type,
+          trial_start_date: existingProfile.trial_start_date,
+          trial_end_date: existingProfile.trial_end_date,
+        }),
       };
       
       // Upsert profile (insert or update)
       const { error } = await (supabase as any)
         .from('profiles')
-        .upsert({
-          id: user.id,
-          ...profileData,
-        }, {
+        .upsert(profileData, {
           onConflict: 'id'
         });
       
