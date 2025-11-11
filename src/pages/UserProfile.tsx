@@ -378,6 +378,62 @@ const UserProfile = () => {
             </CardContent>
           </Card>
 
+          {/* Account Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Account</CardTitle>
+              <CardDescription>
+                Your authentication details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="accountEmailDisplay">Email</Label>
+                <Input
+                  id="accountEmailDisplay"
+                  type="email"
+                  value={user?.email || ''}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="userId">User ID</Label>
+                <Input
+                  id="userId"
+                  type="text"
+                  value={user?.id || ''}
+                  disabled
+                  className="bg-muted font-mono text-xs"
+                />
+              </div>
+
+              {user?.created_at && (
+                <div className="grid gap-2">
+                  <Label htmlFor="accountCreated">Account Created</Label>
+                  <Input
+                    id="accountCreated"
+                    type="text"
+                    value={new Date(user.created_at).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Email is managed by authentication and cannot be edited here.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Subscription & Access Card */}
           <Card>
             <CardHeader>
