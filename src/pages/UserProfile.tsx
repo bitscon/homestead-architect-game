@@ -455,17 +455,6 @@ const UserProfile = () => {
 
               <div className="space-y-3">
                 <div className="grid gap-2">
-                  <Label htmlFor="accountEmail">Email</Label>
-                  <Input
-                    id="accountEmail"
-                    type="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="bg-muted"
-                  />
-                </div>
-
-                <div className="grid gap-2">
                   <Label>Subscription Status</Label>
                   <div className="flex items-center gap-2">
                     <div className={`h-2 w-2 rounded-full ${
