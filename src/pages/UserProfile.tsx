@@ -30,6 +30,7 @@ interface Profile {
   role?: string | null;
   subscription_status?: string | null;
   plan_type?: string | null;
+  subscription_expires_at?: string | null;
   trial_start_date?: string | null;
   trial_end_date?: string | null;
   created_at?: string;
@@ -234,6 +235,44 @@ const UserProfile = () => {
       title: "Account deletion",
       description: "Account deletion feature coming soon.",
     });
+  };
+
+  const handleRefreshSubscription = async () => {
+    // TODO: Call Supabase Edge Function to refresh subscription status
+    toast({
+      title: "Refreshing...",
+      description: "Subscription status will be refreshed.",
+    });
+  };
+
+  const getSubscriptionStatusDisplay = () => {
+    const status = profile?.subscription_status?.toLowerCase();
+    switch (status) {
+      case 'active':
+        return { text: 'Active', color: 'text-green-600 dark:text-green-400' };
+      case 'expired':
+        return { text: 'Expired', color: 'text-yellow-600 dark:text-yellow-400' };
+      case 'canceled':
+        return { text: 'Canceled', color: 'text-red-600 dark:text-red-400' };
+      case 'trialing':
+        return { text: 'Trial', color: 'text-blue-600 dark:text-blue-400' };
+      default:
+        return { text: 'Not set', color: 'text-muted-foreground' };
+    }
+  };
+
+  const getPlanTypeDisplay = () => {
+    const planType = profile?.plan_type?.toLowerCase();
+    switch (planType) {
+      case 'monthly':
+        return 'Monthly';
+      case 'yearly':
+        return 'Yearly';
+      case 'lifetime':
+        return 'Lifetime';
+      default:
+        return 'Not set';
+    }
   };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -582,97 +621,67 @@ const UserProfile = () => {
           {/* Subscription & Access Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Subscription & Access</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Subscription & Access
+              </CardTitle>
               <CardDescription>
-                Manage your account and subscription details
+                Manage your subscription and plan
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Warning banner for expired or canceled subscription */}
-              {(profile?.subscription_status === 'expired' || profile?.subscription_status === 'canceled') && (
-                <Alert className="bg-yellow-50 border-yellow-200">
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                  <AlertDescription className="text-yellow-800">
-                    Your subscription is {profile.subscription_status}. Some features may be limited.
+              {/* Status */}
+              <div className="space-y-1">
+                <Label className="text-muted-foreground">Status</Label>
+                <p className={`font-medium ${getSubscriptionStatusDisplay().color}`}>
+                  {getSubscriptionStatusDisplay().text}
+                </p>
+              </div>
+
+              {/* Plan Type */}
+              <div className="space-y-1">
+                <Label className="text-muted-foreground">Plan</Label>
+                <p className="font-medium">{getPlanTypeDisplay()}</p>
+              </div>
+
+              {/* Expiration */}
+              {profile?.subscription_expires_at && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">Expires</Label>
+                  <p className="font-medium">
+                    {new Date(profile.subscription_expires_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              )}
+
+              {/* Alert for expired/canceled */}
+              {(profile?.subscription_status?.toLowerCase() === 'expired' || 
+                profile?.subscription_status?.toLowerCase() === 'canceled') && (
+                <Alert className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+                  <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <AlertDescription className="text-yellow-800 dark:text-yellow-300">
+                    Your subscription needs attention. Please upgrade or renew.
                   </AlertDescription>
                 </Alert>
               )}
 
-              <div className="space-y-3">
-                <div className="grid gap-2">
-                  <Label>Subscription Status</Label>
-                  <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${
-                      profile?.subscription_status === 'active' ? 'bg-green-500' :
-                      profile?.subscription_status === 'trial' ? 'bg-blue-500' :
-                      profile?.subscription_status === 'expired' ? 'bg-red-500' :
-                      profile?.subscription_status === 'canceled' ? 'bg-orange-500' :
-                      'bg-gray-400'
-                    }`} />
-                    <span className="text-sm font-medium capitalize">
-                      {profile?.subscription_status || 'None'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>Plan Type</Label>
-                  <p className="text-sm font-medium">
-                    {profile?.plan_type || 'Not set'}
-                  </p>
-                </div>
-
-                {/* Trial Window - only show if dates exist */}
-                {(profile?.trial_start_date || profile?.trial_end_date) && (
-                  <div className="grid gap-2 pt-2 border-t">
-                    <Label>Trial Period</Label>
-                    <div className="text-sm space-y-1">
-                      {profile?.trial_start_date && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Started:</span>
-                          <span className="font-medium">
-                            {new Date(profile.trial_start_date).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </span>
-                        </div>
-                      )}
-                      {profile?.trial_end_date && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Ends:</span>
-                          <span className="font-medium">
-                            {new Date(profile.trial_end_date).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2 pt-2">
                 <Button 
-                  className="flex-1" 
+                  onClick={() => navigate('/upgrade')} 
+                  className="w-full"
                   variant="default"
-                  onClick={() => navigate('/upgrade')}
                 >
                   Upgrade Plan
                 </Button>
                 <Button 
-                  className="flex-1" 
+                  onClick={handleRefreshSubscription}
                   variant="outline"
-                  onClick={() => {
-                    toast({
-                      title: "Refresh Status",
-                      description: "This feature is coming soon.",
-                    });
-                  }}
+                  className="w-full"
                 >
                   Refresh Status
                 </Button>
