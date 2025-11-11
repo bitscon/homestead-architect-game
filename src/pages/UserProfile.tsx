@@ -26,6 +26,8 @@ interface Profile {
   location: string | null;
   website_url: string | null;
   bio: string | null;
+  avatar_url?: string | null;
+  role?: string | null;
   subscription_status?: string | null;
   plan_type?: string | null;
   trial_start_date?: string | null;
@@ -139,10 +141,10 @@ const UserProfile = () => {
     try {
       setIsSaving(true);
       
-      // Fetch existing profile first to preserve subscription and role fields
+      // Fetch existing profile first to preserve role, subscription, and avatar fields
       const { data: existingProfile, error: fetchError } = await (supabase as any)
         .from('profiles')
-        .select('subscription_status, plan_type, trial_start_date, trial_end_date')
+        .select('role, avatar_url, subscription_status, plan_type, trial_start_date, trial_end_date')
         .eq('id', user.id)
         .maybeSingle();
       
@@ -153,7 +155,7 @@ const UserProfile = () => {
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
       
-      // Build the profile data, only updating editable fields
+      // Build the profile data, only updating editable fields from the form
       const profileData = {
         id: user.id,
         first_name: firstName,
@@ -163,8 +165,10 @@ const UserProfile = () => {
         website_url: data.website_url?.trim() || null,
         bio: data.bio?.trim() || null,
         updated_at: new Date().toISOString(),
-        // Preserve existing subscription fields if they exist
+        // Preserve existing non-editable fields if they exist
         ...(existingProfile && {
+          role: existingProfile.role,
+          avatar_url: existingProfile.avatar_url,
           subscription_status: existingProfile.subscription_status,
           plan_type: existingProfile.plan_type,
           trial_start_date: existingProfile.trial_start_date,
