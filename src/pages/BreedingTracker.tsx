@@ -406,10 +406,10 @@ const BreedingTracker = () => {
           <CardHeader>
             <CardTitle>Breeding Calendar</CardTitle>
           </CardHeader>
-          <CardContent className="flex justify-center">
+          <CardContent>
             <Calendar
               mode="single"
-              className="rounded-md border pointer-events-auto"
+              className="rounded-md border pointer-events-auto w-full"
               modifiers={{
                 eventDate: calendarDates.map(d => d.date),
               }}
