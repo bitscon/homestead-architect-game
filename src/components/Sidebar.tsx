@@ -22,7 +22,7 @@ const navSections = [
       { title: "Homestead Balance", href: "/homestead-balance", icon: Scale },
       { title: "Infrastructure", href: "/infrastructure", icon: Wrench },
       { title: "Inventory Management", href: "/inventory", icon: Boxes },
-      { title: "Knowledge Base", href: "/knowledge-base", icon: Book },
+      // { title: "Knowledge Base", href: "/knowledge-base", icon: Book },
       { title: "Property Assessment", href: "/property-assessment", icon: MapPin },
       { title: "Seasonal Calendar", href: "/seasonal-calendar", icon: Calendar },
       { title: "Strategic Planner", href: "/strategic-planner", icon: Compass },
@@ -31,7 +31,7 @@ const navSections = [
   {
     title: "Community",
     items: [
-      { title: "Community Forum", href: "https://community.homesteadarchitect.com", icon: Users, external: true },
+      { title: "Community Forum", href: "https://www.skool.com/billybs-backyard-freedom-hub-4823/about?ref=b69230eadf3c43fb9f6bb40527c4698d", icon: Users, external: true },
     ],
   },
 ];
