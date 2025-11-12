@@ -114,6 +114,7 @@ const Dashboard = () => {
             icon={Clock}
             tone="blue"
             description="Currently in progress"
+            href="/seasonal-calendar"
           />
           <StatCard
             title="Pending Tasks"
@@ -121,6 +122,7 @@ const Dashboard = () => {
             icon={Target}
             tone="amber"
             description="Awaiting action"
+            href="/seasonal-calendar"
           />
           <StatCard
             title="This Month's Net"
@@ -128,6 +130,7 @@ const Dashboard = () => {
             icon={TrendingUp}
             tone={netIncome >= 0 ? "green" : "neutral"}
             description={format(now, 'MMMM yyyy')}
+            href="/homestead-balance"
           />
           <StatCard
             title="Animals"
@@ -135,6 +138,7 @@ const Dashboard = () => {
             icon={Heart}
             tone="green"
             description="Total tracked"
+            href="/health-hub"
           />
         </div>
 
