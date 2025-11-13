@@ -221,7 +221,6 @@ export default function InventoryManagement() {
                             {item.current_stock} {item.unit}
                           </span>
                           <span>Reorder at: {item.reorder_point}</span>
-                          {item.supplier && <span>Supplier: {item.supplier}</span>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

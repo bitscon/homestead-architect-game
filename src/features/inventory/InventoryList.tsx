@@ -61,12 +61,6 @@ export function InventoryList({ items, selectedId, onSelect, onDelete }: Invento
                       <span className="text-muted-foreground">Reorder at:</span>
                       <span className="ml-2 text-foreground">{item.reorder_point} {item.unit}</span>
                     </div>
-                    {item.supplier && (
-                      <div>
-                        <span className="text-muted-foreground">Supplier:</span>
-                        <span className="ml-2 text-foreground">{item.supplier}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <Button
