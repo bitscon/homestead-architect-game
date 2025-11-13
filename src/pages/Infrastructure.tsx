@@ -28,6 +28,8 @@ import { toast } from "sonner";
 import { 
   getInfrastructureProjects,
   createInfrastructureProject,
+  updateInfrastructureProject,
+  deleteInfrastructureProject,
   type InfrastructureProject,
   type InfrastructureProjectInsert
 } from "@/features/infrastructure/api";
@@ -85,13 +87,36 @@ export default function Infrastructure() {
         notes: data.notes,
       };
       
-      await createInfrastructureProject(user.id, projectData);
-      toast.success("Project created successfully");
+      if (editingProject) {
+        await updateInfrastructureProject(editingProject.id, user.id, projectData);
+        toast.success("Project updated successfully");
+        setEditingProject(null);
+      } else {
+        await createInfrastructureProject(user.id, projectData);
+        toast.success("Project created successfully");
+      }
+      
+      setIsModalOpen(false);
       await loadProjects();
     } catch (error) {
-      console.error("Failed to create project:", error);
-      toast.error("Failed to create project");
+      console.error("Failed to save project:", error);
+      toast.error(editingProject ? "Failed to update project" : "Failed to create project");
       throw error;
+    }
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    if (!user) return;
+    
+    if (!confirm("Are you sure you want to delete this project?")) return;
+
+    try {
+      await deleteInfrastructureProject(id, user.id);
+      toast.success("Project deleted successfully");
+      await loadProjects();
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+      toast.error("Failed to delete project");
     }
   };
 

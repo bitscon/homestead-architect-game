@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, CalendarIcon } from 'lucide-react';
 import { getCropOptions, CropOption } from '@/features/crops/cropsApi';
 import { PlantingCalendar } from '@/features/crops/PlantingCalendar';
+import { 
+  getRotationPlans, 
+  createRotationPlan, 
+  updateRotationPlan, 
+  deleteRotationPlan,
+  type RotationPlan 
+} from '@/features/crops/rotationApi';
+import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface Crop {
   id: string;
@@ -142,25 +151,16 @@ const mockCrops: Crop[] = [
 
 const categories = ['All', 'Vegetables', 'Herbs', 'Fruits'];
 
-interface RotationPlan {
-  id: string;
-  planName: string;
-  plotName: string;
-  year: number;
-  season: string;
-  crop: string;
-  plantDate: Date | null;
-  harvestDate: Date | null;
-  notes: string;
-}
-
 const CropPlanner = () => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCrop, setSelectedCrop] = useState<Crop | null>(null);
   
   // Rotation Plan form state
   const [rotationPlans, setRotationPlans] = useState<RotationPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [planName, setPlanName] = useState('');
   const [plotName, setPlotName] = useState('');
   const [year, setYear] = useState(new Date().getFullYear());
@@ -173,7 +173,7 @@ const CropPlanner = () => {
   // Crop options for rotation form (fetched from DB or fallback)
   const [cropOptions, setCropOptions] = useState<CropOption[]>([]);
 
-  // Load crop options on mount
+  // Load crop options and rotation plans on mount
   useEffect(() => {
     const loadCropOptions = async () => {
       const options = await getCropOptions();
@@ -181,6 +181,27 @@ const CropPlanner = () => {
     };
     loadCropOptions();
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadRotationPlans();
+    }
+  }, [user?.id]);
+
+  const loadRotationPlans = async () => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      const plans = await getRotationPlans(user.id);
+      setRotationPlans(plans);
+    } catch (error) {
+      console.error('Failed to load rotation plans:', error);
+      toast.error('Failed to load rotation plans');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCrops = mockCrops.filter((crop) => {
     const matchesSearch = crop.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -200,34 +221,48 @@ const CropPlanner = () => {
     return 'bg-gray-500/10 text-gray-700 dark:text-gray-400';
   };
 
-  const handleSaveRotation = () => {
-    if (!planName || !plotName || !season || !selectedCropForPlan) {
-      return; // Basic validation
+  const handleSaveRotation = async () => {
+    if (!user?.id) {
+      toast.error('You must be logged in to save rotation plans');
+      return;
     }
 
-    const newPlan: RotationPlan = {
-      id: Date.now().toString(),
-      planName,
-      plotName,
-      year,
-      season,
-      crop: selectedCropForPlan,
-      plantDate: plantDate || null,
-      harvestDate: harvestDate || null,
-      notes,
-    };
+    if (!planName || !plotName || !season || !selectedCropForPlan) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
 
-    setRotationPlans([...rotationPlans, newPlan]);
-    
-    // Reset form
-    setPlanName('');
-    setPlotName('');
-    setYear(new Date().getFullYear());
-    setSeason('');
-    setSelectedCropForPlan('');
-    setPlantDate(undefined);
-    setHarvestDate(undefined);
-    setNotes('');
+    try {
+      setSaving(true);
+      await createRotationPlan({
+        name: planName,
+        plot_name: plotName,
+        year,
+        season,
+        crop_name: selectedCropForPlan,
+        plant_date: plantDate ? format(plantDate, 'yyyy-MM-dd') : null,
+        harvest_date: harvestDate ? format(harvestDate, 'yyyy-MM-dd') : null,
+        notes: notes || null,
+      });
+
+      toast.success('Rotation plan created successfully');
+      await loadRotationPlans();
+      
+      // Reset form
+      setPlanName('');
+      setPlotName('');
+      setYear(new Date().getFullYear());
+      setSeason('');
+      setSelectedCropForPlan('');
+      setPlantDate(undefined);
+      setHarvestDate(undefined);
+      setNotes('');
+    } catch (error) {
+      console.error('Failed to save rotation plan:', error);
+      toast.error('Failed to save rotation plan');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancelRotation = () => {
@@ -239,6 +274,19 @@ const CropPlanner = () => {
     setPlantDate(undefined);
     setHarvestDate(undefined);
     setNotes('');
+  };
+
+  const handleDeleteRotation = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this rotation plan?')) return;
+
+    try {
+      await deleteRotationPlan(id);
+      toast.success('Rotation plan deleted successfully');
+      await loadRotationPlans();
+    } catch (error) {
+      console.error('Failed to delete rotation plan:', error);
+      toast.error('Failed to delete rotation plan');
+    }
   };
 
   return (
@@ -565,14 +613,14 @@ const CropPlanner = () => {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button variant="outline" onClick={handleCancelRotation}>
+                  <Button variant="outline" onClick={handleCancelRotation} disabled={saving}>
                     Cancel
                   </Button>
                   <Button 
                     onClick={handleSaveRotation}
-                    disabled={!planName || !plotName || !season || !selectedCropForPlan}
+                    disabled={saving || !planName || !plotName || !season || !selectedCropForPlan}
                   >
-                    Save Rotation
+                    {saving ? 'Saving...' : 'Save Rotation'}
                   </Button>
                 </div>
               </CardContent>
@@ -596,26 +644,26 @@ const CropPlanner = () => {
                         <CardHeader>
                           <div className="flex items-start justify-between">
                             <div>
-                              <CardTitle className="text-lg">{plan.planName}</CardTitle>
+                              <CardTitle className="text-lg">{plan.name}</CardTitle>
                               <p className="text-sm text-muted-foreground mt-1">
-                                {plan.plotName} • {plan.season} {plan.year}
+                                {plan.plot_name} • {plan.season} {plan.year}
                               </p>
                             </div>
-                            <Badge variant="outline">{plan.crop}</Badge>
+                            <Badge variant="outline">{plan.crop_name}</Badge>
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-2">
                           <div className="grid grid-cols-2 gap-4 text-sm">
-                            {plan.plantDate && (
+                            {plan.plant_date && (
                               <div>
                                 <span className="text-muted-foreground">Plant Date:</span>
-                                <p className="font-medium">{format(plan.plantDate, "PP")}</p>
+                                <p className="font-medium">{format(new Date(plan.plant_date), "PP")}</p>
                               </div>
                             )}
-                            {plan.harvestDate && (
+                            {plan.harvest_date && (
                               <div>
                                 <span className="text-muted-foreground">Harvest Date:</span>
-                                <p className="font-medium">{format(plan.harvestDate, "PP")}</p>
+                                <p className="font-medium">{format(new Date(plan.harvest_date), "PP")}</p>
                               </div>
                             )}
                           </div>
@@ -625,6 +673,15 @@ const CropPlanner = () => {
                               <p className="text-sm mt-1">{plan.notes}</p>
                             </div>
                           )}
+                          <div className="pt-2 flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteRotation(plan.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -686,19 +743,7 @@ const CropPlanner = () => {
                 </CardContent>
               </Card>
             ) : (
-              <PlantingCalendar plans={rotationPlans.map(plan => ({
-                id: plan.id,
-                user_id: '',
-                name: plan.planName,
-                property_id: null,
-                plot_name: plan.plotName,
-                year: plan.year,
-                season: plan.season,
-                crop_name: plan.crop,
-                plant_date: plan.plantDate ? format(plan.plantDate, 'yyyy-MM-dd') : null,
-                harvest_date: plan.harvestDate ? format(plan.harvestDate, 'yyyy-MM-dd') : null,
-                notes: plan.notes,
-              }))} />
+              <PlantingCalendar plans={rotationPlans} />
             )}
           </div>
         </TabsContent>
