@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { format, parseISO } from 'date-fns';
+import { awardXP } from '@/game/gameEngine';
 
 export default function SeasonalCalendar() {
   const { user } = useAuth();
@@ -91,6 +92,14 @@ export default function SeasonalCalendar() {
       const updated = await updateTask(selectedTask.id, user.id, data);
       setTasks(tasks.map((t) => (t.id === updated.id ? updated : t)));
       setSelectedTask(updated);
+      
+      // Award XP if task was just completed
+      if (data.status === 'Completed' && selectedTask.status !== 'Completed') {
+        awardXP('task_completed', 25, { taskId: updated.id }).catch((err) => {
+          console.error('[SeasonalCalendar] Failed to award XP:', err);
+        });
+      }
+      
       toast({
         title: 'Success',
         description: 'Task updated successfully',
