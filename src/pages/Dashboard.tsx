@@ -27,6 +27,7 @@ import { getTransactions } from '@/features/finance/api';
 import { getAnimals } from '@/features/animals/api';
 import { format, isAfter, isBefore, addDays, startOfMonth, endOfMonth } from 'date-fns';
 import { XPBar } from '@/components/game/XPBar';
+import { GameDebugPanel } from '@/components/game/GameDebugPanel';
 
 const Dashboard = () => {
   const { profile, user } = useAuth();
@@ -94,7 +95,8 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="grid lg:grid-cols-[2fr,1fr] gap-6">
+    <>
+      <div className="grid lg:grid-cols-[2fr,1fr] gap-6">
       {/* Main Content */}
       <div className="space-y-6">
         {/* Hero Section */}
@@ -349,6 +351,14 @@ const Dashboard = () => {
         </Card>
       </div>
     </div>
+    
+    {/* Gamification Debug Panel (dev only) */}
+    {import.meta.env.VITE_SHOW_GAME_DEBUG === 'true' && (
+      <div className="mt-6">
+        <GameDebugPanel />
+      </div>
+    )}
+    </>
   );
 };
 
