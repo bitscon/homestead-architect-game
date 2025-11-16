@@ -26,6 +26,7 @@ import { getTasks } from '@/features/tasks/api';
 import { getTransactions } from '@/features/finance/api';
 import { getAnimals } from '@/features/animals/api';
 import { format, isAfter, isBefore, addDays, startOfMonth, endOfMonth } from 'date-fns';
+import { XPBar } from '@/components/game/XPBar';
 
 const Dashboard = () => {
   const { profile, user } = useAuth();
@@ -97,13 +98,20 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="space-y-6">
         {/* Hero Section */}
-        <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            {greeting}, {displayName}!
-          </h1>
-          <p className="text-muted-foreground">
-            Here's a snapshot of your homestead today.
-          </p>
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">
+              {greeting}, {displayName}!
+            </h1>
+            <p className="text-muted-foreground">
+              Here's a snapshot of your homestead today.
+            </p>
+          </div>
+          
+          {/* XP Bar */}
+          <div className="max-w-2xl">
+            <XPBar />
+          </div>
         </div>
 
         {/* Overview Stats */}

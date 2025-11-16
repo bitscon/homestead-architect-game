@@ -17,6 +17,7 @@ import { z } from "zod";
 import { AlertCircle, Loader2, User as UserIcon, CreditCard, Camera } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
+import { XPBar } from "@/components/game/XPBar";
 
 interface Profile {
   id: string;
@@ -403,6 +404,11 @@ const UserProfile = () => {
         icon={UserIcon}
         className="mb-6"
       />
+
+      {/* XP Bar */}
+      <div className="mb-6 max-w-2xl mx-auto lg:mx-0">
+        <XPBar />
+      </div>
 
       {/* Mobile-first responsive grid */}
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
