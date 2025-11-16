@@ -14,6 +14,7 @@ import {
   deleteJournalEntry,
   type JournalEntry,
 } from '@/features/journal/api';
+import { awardXP } from '@/game/gameEngine';
 
 const HomesteadJournal = () => {
   const { user } = useAuth();
@@ -34,8 +35,16 @@ const HomesteadJournal = () => {
         ...data,
         user_id: user!.id,
       }),
-    onSuccess: () => {
+    onSuccess: (newEntry) => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      
+      // Award XP for journal creation (fire and forget)
+      if (newEntry?.id) {
+        awardXP('journal_created', 15, { journalId: newEntry.id }).catch((err) => {
+          console.error('[HomesteadJournal] Failed to award XP:', err);
+        });
+      }
+      
       toast({
         title: 'Success',
         description: 'Journal entry created successfully',
