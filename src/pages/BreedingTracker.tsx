@@ -56,8 +56,15 @@ const BreedingTracker = () => {
         ...data,
         user_id: user!.id,
       }),
-    onSuccess: () => {
+    onSuccess: (newEvent) => {
       queryClient.invalidateQueries({ queryKey: ['breeding-events'] });
+      queryClient.invalidateQueries({ queryKey: ['breeding-dashboard'] });
+      
+      // TODO: Award XP for breeding event creation
+      // awardXP('breeding_event_created', 15, { eventId: newEvent.id, eventType: newEvent.event_type }).catch((err) => {
+      //   console.error('[BreedingTracker] Failed to award XP:', err);
+      // });
+      
       toast({
         title: 'Success',
         description: 'Breeding event created successfully',
@@ -66,6 +73,7 @@ const BreedingTracker = () => {
       setSelectedEvent(null);
     },
     onError: (error: Error) => {
+      console.error('[BreedingTracker] Error creating breeding event:', error);
       toast({
         title: 'Error',
         description: error.message,
@@ -79,6 +87,7 @@ const BreedingTracker = () => {
       updateBreedingEvent(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['breeding-events'] });
+      queryClient.invalidateQueries({ queryKey: ['breeding-dashboard'] });
       toast({
         title: 'Success',
         description: 'Breeding event updated successfully',
@@ -87,6 +96,7 @@ const BreedingTracker = () => {
       setSelectedEvent(null);
     },
     onError: (error: Error) => {
+      console.error('[BreedingTracker] Error updating breeding event:', error);
       toast({
         title: 'Error',
         description: error.message,

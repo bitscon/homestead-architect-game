@@ -234,7 +234,7 @@ const CropPlanner = () => {
 
     try {
       setSaving(true);
-      await createRotationPlan({
+      const newPlan = await createRotationPlan({
         name: planName,
         plot_name: plotName,
         year,
@@ -244,6 +244,11 @@ const CropPlanner = () => {
         harvest_date: harvestDate ? format(harvestDate, 'yyyy-MM-dd') : null,
         notes: notes || null,
       });
+
+      // TODO: Award XP for crop rotation creation
+      // awardXP('crop_rotation_created', 15, { planId: newPlan.id }).catch((err) => {
+      //   console.error('[CropPlanner] Failed to award XP:', err);
+      // });
 
       toast.success('Rotation plan created successfully');
       await loadRotationPlans();
@@ -258,7 +263,7 @@ const CropPlanner = () => {
       setHarvestDate(undefined);
       setNotes('');
     } catch (error) {
-      console.error('Failed to save rotation plan:', error);
+      console.error('[CropPlanner] Failed to save rotation plan:', error);
       toast.error('Failed to save rotation plan');
     } finally {
       setSaving(false);
@@ -284,7 +289,7 @@ const CropPlanner = () => {
       toast.success('Rotation plan deleted successfully');
       await loadRotationPlans();
     } catch (error) {
-      console.error('Failed to delete rotation plan:', error);
+      console.error('[CropPlanner] Failed to delete rotation plan:', error);
       toast.error('Failed to delete rotation plan');
     }
   };

@@ -199,6 +199,7 @@ const UserProfile = () => {
       // Refresh profile data
       await fetchUserAndProfile();
     } catch (error) {
+      console.error('[UserProfile] Error updating profile:', error);
       toast({
         title: "Error",
         description: "Failed to save profile. Please try again.",
@@ -218,6 +219,7 @@ const UserProfile = () => {
       });
       navigate('/login');
     } catch (error) {
+      console.error('[UserProfile] Error signing out:', error);
       toast({
         title: "Error",
         description: "Failed to sign out. Please try again.",

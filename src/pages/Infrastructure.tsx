@@ -92,14 +92,20 @@ export default function Infrastructure() {
         toast.success("Project updated successfully");
         setEditingProject(null);
       } else {
-        await createInfrastructureProject(user.id, projectData);
+        const newProject = await createInfrastructureProject(user.id, projectData);
+        
+        // TODO: Award XP for infrastructure project creation
+        // awardXP('infrastructure_created', 30, { projectId: newProject.id }).catch((err) => {
+        //   console.error('[Infrastructure] Failed to award XP:', err);
+        // });
+        
         toast.success("Project created successfully");
       }
       
       setIsModalOpen(false);
       await loadProjects();
     } catch (error) {
-      console.error("Failed to save project:", error);
+      console.error('[Infrastructure] Failed to save project:', error);
       toast.error(editingProject ? "Failed to update project" : "Failed to create project");
       throw error;
     }

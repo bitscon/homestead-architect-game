@@ -176,6 +176,7 @@ export default function HomesteadBalance() {
         description: 'Category deleted successfully',
       });
     } catch (error) {
+      console.error('[HomesteadBalance] Failed to delete category:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete category',
@@ -194,11 +195,18 @@ export default function HomesteadBalance() {
       setIsTransactionDialogOpen(false);
       setSelectedTransaction(null);
       loadMonthlyTransactions(); // Refresh monthly data
+      
+      // TODO: Award XP for transaction creation (could differentiate between income/expense)
+      // awardXP('transaction_created', 5, { transactionId: newTransaction.id, type: newTransaction.type }).catch((err) => {
+      //   console.error('[HomesteadBalance] Failed to award XP:', err);
+      // });
+      
       toast({
         title: 'Success',
         description: 'Transaction added successfully',
       });
     } catch (error) {
+      console.error('[HomesteadBalance] Failed to create transaction:', error);
       toast({
         title: 'Error',
         description: 'Failed to add transaction',
@@ -222,6 +230,7 @@ export default function HomesteadBalance() {
         description: 'Transaction updated successfully',
       });
     } catch (error) {
+      console.error('[HomesteadBalance] Failed to update transaction:', error);
       toast({
         title: 'Error',
         description: 'Failed to update transaction',
@@ -245,6 +254,7 @@ export default function HomesteadBalance() {
         description: 'Transaction deleted successfully',
       });
     } catch (error) {
+      console.error('[HomesteadBalance] Failed to delete transaction:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete transaction',
