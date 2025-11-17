@@ -119,13 +119,21 @@ export default function HealthHub() {
       } else {
         const newAnimal = await createAnimal(user.id, data);
         setAnimals([newAnimal, ...animals]);
+        
+        // TODO: Award XP for animal creation
+        // awardXP('animal_added', 20, { animalId: newAnimal.id }).catch((err) => {
+        //   console.error('[HealthHub] Failed to award XP:', err);
+        // });
+        
         toast({
           title: 'Success',
           description: 'Animal added successfully',
         });
       }
       setSelectedAnimal(null);
+      setFormOpen(false);
     } catch (error) {
+      console.error('[HealthHub] Error saving animal:', error);
       toast({
         title: 'Error',
         description: `Failed to ${selectedAnimal ? 'update' : 'add'} animal`,
@@ -155,7 +163,9 @@ export default function HealthHub() {
         });
       }
       setSelectedMedication(null);
+      setMedicationFormOpen(false);
     } catch (error) {
+      console.error('[HealthHub] Error saving medication:', error);
       toast({
         title: 'Error',
         description: `Failed to ${selectedMedication ? 'update' : 'add'} medication`,
@@ -181,6 +191,7 @@ export default function HealthHub() {
         description: 'Animal deleted successfully',
       });
     } catch (error) {
+      console.error('[HealthHub] Error deleting animal:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete animal',
@@ -203,6 +214,7 @@ export default function HealthHub() {
         description: 'Medication deleted successfully',
       });
     } catch (error) {
+      console.error('[HealthHub] Error deleting medication:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete medication',

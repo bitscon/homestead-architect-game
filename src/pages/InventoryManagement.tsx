@@ -59,12 +59,18 @@ export default function InventoryManagement() {
         // Create new item
         const newItem = await createInventoryItem(user.id, data);
         setItems([newItem, ...items]);
+        
+        // TODO: Award XP for inventory item creation
+        // awardXP('inventory_added', 10, { itemId: newItem.id }).catch((err) => {
+        //   console.error('[InventoryManagement] Failed to award XP:', err);
+        // });
+        
         toast.success('Item added successfully');
       }
       setIsModalOpen(false);
       setEditingItem(null);
     } catch (error) {
-      console.error('Failed to save item:', error);
+      console.error('[InventoryManagement] Failed to save item:', error);
       toast.error(editingItem ? 'Failed to update item' : 'Failed to add item');
       throw error;
     }
@@ -80,7 +86,7 @@ export default function InventoryManagement() {
       setItems(items.filter((i) => i.id !== id));
       toast.success('Item deleted successfully');
     } catch (error) {
-      console.error('Failed to delete item:', error);
+      console.error('[InventoryManagement] Failed to delete item:', error);
       toast.error('Failed to delete item');
     }
   };

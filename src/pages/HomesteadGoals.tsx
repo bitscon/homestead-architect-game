@@ -72,8 +72,14 @@ const HomesteadGoals = () => {
         ...data,
         user_id: user!.id,
       }),
-    onSuccess: () => {
+    onSuccess: (newGoal) => {
       queryClient.invalidateQueries({ queryKey: ['homestead-goals'] });
+      
+      // TODO: Award XP for goal creation
+      // awardXP('goal_created', 25, { goalId: newGoal.id }).catch((err) => {
+      //   console.error('[HomesteadGoals] Failed to award XP:', err);
+      // });
+      
       toast({
         title: 'Success',
         description: 'Goal created successfully',
@@ -82,6 +88,7 @@ const HomesteadGoals = () => {
       setSelectedGoal(null);
     },
     onError: (error: Error) => {
+      console.error('[HomesteadGoals] Error creating goal:', error);
       toast({
         title: 'Error',
         description: error.message,
@@ -102,6 +109,7 @@ const HomesteadGoals = () => {
       setShowForm(false);
     },
     onError: (error: Error) => {
+      console.error('[HomesteadGoals] Error updating goal:', error);
       toast({
         title: 'Error',
         description: error.message,
@@ -121,6 +129,7 @@ const HomesteadGoals = () => {
       setSelectedGoal(null);
     },
     onError: (error: Error) => {
+      console.error('[HomesteadGoals] Error deleting goal:', error);
       toast({
         title: 'Error',
         description: error.message,
