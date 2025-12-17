@@ -44,6 +44,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Settings, Edit2, Trash2, Bird, Pill, Search, Calculator, AlertTriangle, Scissors, Calendar, History } from 'lucide-react';
 import { format, addDays, parseISO, differenceInDays } from 'date-fns';
+import { awardXP } from '@/game/gameEngine';
 
 export default function HealthHub() {
   const { user } = useAuth();
@@ -120,10 +121,10 @@ export default function HealthHub() {
         const newAnimal = await createAnimal(user.id, data);
         setAnimals([newAnimal, ...animals]);
         
-        // TODO: Award XP for animal creation
-        // awardXP('animal_added', 20, { animalId: newAnimal.id }).catch((err) => {
-        //   console.error('[HealthHub] Failed to award XP:', err);
-        // });
+        // Award XP for animal creation
+        awardXP('animal_added', 20, { animalId: newAnimal.id }).catch((err) => {
+          console.error('[HealthHub] Failed to award XP:', err);
+        });
         
         toast({
           title: 'Success',

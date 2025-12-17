@@ -21,6 +21,7 @@ import {
   BreedingEvent,
 } from '@/features/breeding/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { awardXP } from '@/game/gameEngine';
 
 const BreedingTracker = () => {
   const { user } = useAuth();
@@ -60,10 +61,10 @@ const BreedingTracker = () => {
       queryClient.invalidateQueries({ queryKey: ['breeding-events'] });
       queryClient.invalidateQueries({ queryKey: ['breeding-dashboard'] });
       
-      // TODO: Award XP for breeding event creation
-      // awardXP('breeding_event_created', 15, { eventId: newEvent.id, eventType: newEvent.event_type }).catch((err) => {
-      //   console.error('[BreedingTracker] Failed to award XP:', err);
-      // });
+      // Award XP for breeding event creation
+      awardXP('breeding_event_created', 15, { eventId: newEvent.id, eventType: newEvent.event_type }).catch((err) => {
+        console.error('[BreedingTracker] Failed to award XP:', err);
+      });
       
       toast({
         title: 'Success',

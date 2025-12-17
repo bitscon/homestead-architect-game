@@ -22,6 +22,7 @@ import {
   type HomesteadGoal,
   type GoalUpdateEntry,
 } from '@/features/goals/api';
+import { awardXP } from '@/game/gameEngine';
 
 const HomesteadGoals = () => {
   const { user } = useAuth();
@@ -75,10 +76,10 @@ const HomesteadGoals = () => {
     onSuccess: (newGoal) => {
       queryClient.invalidateQueries({ queryKey: ['homestead-goals'] });
       
-      // TODO: Award XP for goal creation
-      // awardXP('goal_created', 25, { goalId: newGoal.id }).catch((err) => {
-      //   console.error('[HomesteadGoals] Failed to award XP:', err);
-      // });
+      // Award XP for goal creation
+      awardXP('goal_created', 25, { goalId: newGoal.id }).catch((err) => {
+        console.error('[HomesteadGoals] Failed to award XP:', err);
+      });
       
       toast({
         title: 'Success',

@@ -31,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { awardXP } from '@/game/gameEngine';
 
 export default function HomesteadBalance() {
   const { user } = useAuth();
@@ -196,10 +197,10 @@ export default function HomesteadBalance() {
       setSelectedTransaction(null);
       loadMonthlyTransactions(); // Refresh monthly data
       
-      // TODO: Award XP for transaction creation (could differentiate between income/expense)
-      // awardXP('transaction_created', 5, { transactionId: newTransaction.id, type: newTransaction.type }).catch((err) => {
-      //   console.error('[HomesteadBalance] Failed to award XP:', err);
-      // });
+      // Award XP for transaction creation
+      awardXP('transaction_created', 5, { transactionId: newTransaction.id, type: newTransaction.type }).catch((err) => {
+        console.error('[HomesteadBalance] Failed to award XP:', err);
+      });
       
       toast({
         title: 'Success',

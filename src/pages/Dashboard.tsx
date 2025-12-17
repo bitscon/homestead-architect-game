@@ -28,6 +28,8 @@ import { getAnimals } from '@/features/animals/api';
 import { format, isAfter, isBefore, addDays, startOfMonth, endOfMonth } from 'date-fns';
 import { XPBar } from '@/components/game/XPBar';
 import { GameDebugPanel } from '@/components/game/GameDebugPanel';
+import { AchievementsPanel } from '@/components/game/AchievementsPanel';
+import { Leaderboard } from '@/components/game/Leaderboard';
 
 const Dashboard = () => {
   const { profile, user } = useAuth();
@@ -278,6 +280,12 @@ const Dashboard = () => {
 
       {/* Right Sidebar */}
       <div className="space-y-6">
+        {/* Achievements (compact) */}
+        <AchievementsPanel compact />
+        
+        {/* Leaderboard */}
+        <Leaderboard />
+
         {/* Animal Health */}
         <Card>
           <CardHeader>
