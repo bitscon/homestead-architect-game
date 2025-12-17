@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { checkAndAwardAchievements, getActionCounts } from './achievements';
 
 /**
  * Computes the level based on total XP.
@@ -29,6 +30,7 @@ async function getCurrentUserId(): Promise<string | null> {
 /**
  * Awards XP to the current user for a specific action.
  * Inserts an event into xp_events and updates user_stats.
+ * Also checks and awards achievements.
  * 
  * @param action - The action performed (e.g., "task_completed", "journal_entry")
  * @param xp - The amount of XP to award
@@ -94,6 +96,21 @@ export async function awardXP(
     }
 
     console.log(`[GameEngine] Awarded ${xp} XP for "${action}". Total: ${newTotalXp} XP, Level: ${newLevel}`);
+
+    // Check for achievements (fire and forget)
+    getActionCounts().then(actionCounts => {
+      checkAndAwardAchievements(newTotalXp, actionCounts).then(newAchievements => {
+        if (newAchievements.length > 0) {
+          console.log(`[GameEngine] Unlocked ${newAchievements.length} achievement(s):`, 
+            newAchievements.map(a => a.name).join(', '));
+        }
+      }).catch(err => {
+        console.error('[GameEngine] Error checking achievements:', err);
+      });
+    }).catch(err => {
+      console.error('[GameEngine] Error getting action counts:', err);
+    });
+
   } catch (error) {
     console.error('[GameEngine] Exception in awardXP:', error);
   }

@@ -17,6 +17,7 @@ import { StatCard, EmptyState } from '@/components/ui';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Package, AlertTriangle, XCircle, FolderOpen, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { awardXP } from '@/game/gameEngine';
 
 export default function InventoryManagement() {
   const { user } = useAuth();
@@ -60,10 +61,10 @@ export default function InventoryManagement() {
         const newItem = await createInventoryItem(user.id, data);
         setItems([newItem, ...items]);
         
-        // TODO: Award XP for inventory item creation
-        // awardXP('inventory_added', 10, { itemId: newItem.id }).catch((err) => {
-        //   console.error('[InventoryManagement] Failed to award XP:', err);
-        // });
+        // Award XP for inventory item creation
+        awardXP('inventory_added', 10, { itemId: newItem.id }).catch((err) => {
+          console.error('[InventoryManagement] Failed to award XP:', err);
+        });
         
         toast.success('Item added successfully');
       }

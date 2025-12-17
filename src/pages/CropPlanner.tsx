@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { EmptyState } from '@/components/ui/EmptyState';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { awardXP } from '@/game/gameEngine';
 
 interface Crop {
   id: string;
@@ -245,10 +246,10 @@ const CropPlanner = () => {
         notes: notes || null,
       });
 
-      // TODO: Award XP for crop rotation creation
-      // awardXP('crop_rotation_created', 15, { planId: newPlan.id }).catch((err) => {
-      //   console.error('[CropPlanner] Failed to award XP:', err);
-      // });
+      // Award XP for crop rotation creation
+      awardXP('crop_rotation_created', 15, { planId: newPlan.id }).catch((err) => {
+        console.error('[CropPlanner] Failed to award XP:', err);
+      });
 
       toast.success('Rotation plan created successfully');
       await loadRotationPlans();

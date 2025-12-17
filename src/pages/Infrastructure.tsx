@@ -35,6 +35,7 @@ import {
 } from "@/features/infrastructure/api";
 import { InfrastructureModal } from "@/features/infrastructure/InfrastructureModal";
 import type { InfrastructureFormData } from "@/features/infrastructure/formSchema";
+import { awardXP } from '@/game/gameEngine';
 
 export default function Infrastructure() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -94,10 +95,10 @@ export default function Infrastructure() {
       } else {
         const newProject = await createInfrastructureProject(user.id, projectData);
         
-        // TODO: Award XP for infrastructure project creation
-        // awardXP('infrastructure_created', 30, { projectId: newProject.id }).catch((err) => {
-        //   console.error('[Infrastructure] Failed to award XP:', err);
-        // });
+        // Award XP for infrastructure project creation
+        awardXP('infrastructure_created', 30, { projectId: newProject.id }).catch((err) => {
+          console.error('[Infrastructure] Failed to award XP:', err);
+        });
         
         toast.success("Project created successfully");
       }
