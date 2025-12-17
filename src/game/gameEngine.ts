@@ -1,5 +1,35 @@
 import { supabase } from '@/integrations/supabase/client';
-import { checkAndAwardAchievements, getActionCounts } from './achievements';
+import { checkAndAwardAchievements, getActionCounts, Achievement } from './achievements';
+import { toast } from 'sonner';
+
+// Store callback for achievement notifications
+let achievementNotificationCallback: ((achievements: Achievement[]) => void) | null = null;
+
+/**
+ * Set a callback to be called when achievements are unlocked
+ */
+export function setAchievementNotificationCallback(
+  callback: ((achievements: Achievement[]) => void) | null
+) {
+  achievementNotificationCallback = callback;
+}
+
+/**
+ * Show toast notifications for newly unlocked achievements
+ */
+function notifyAchievements(achievements: Achievement[]) {
+  if (achievementNotificationCallback) {
+    achievementNotificationCallback(achievements);
+  } else {
+    // Default toast notifications
+    achievements.forEach((achievement) => {
+      toast.success(`🏆 Achievement Unlocked!`, {
+        description: `${achievement.icon} ${achievement.name} - ${achievement.description}`,
+        duration: 5000,
+      });
+    });
+  }
+}
 
 /**
  * Computes the level based on total XP.
@@ -103,6 +133,8 @@ export async function awardXP(
         if (newAchievements.length > 0) {
           console.log(`[GameEngine] Unlocked ${newAchievements.length} achievement(s):`, 
             newAchievements.map(a => a.name).join(', '));
+          // Show toast notifications for newly unlocked achievements
+          notifyAchievements(newAchievements);
         }
       }).catch(err => {
         console.error('[GameEngine] Error checking achievements:', err);
