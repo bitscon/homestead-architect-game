@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { AchievementBadge } from './AchievementBadge';
 import { 
   ACHIEVEMENTS, 
@@ -9,7 +11,7 @@ import {
   UserAchievement,
   Achievement 
 } from '@/game/achievements';
-import { Award } from 'lucide-react';
+import { Award, ChevronRight } from 'lucide-react';
 
 interface AchievementsPanelProps {
   compact?: boolean;
@@ -110,6 +112,12 @@ export const AchievementsPanel = ({ compact = false }: AchievementsPanelProps) =
               )}
             </div>
           )}
+          <Button asChild variant="ghost" size="sm" className="mt-3 w-full">
+            <Link to="/achievements" className="flex items-center justify-center gap-1">
+              View All Achievements
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     );

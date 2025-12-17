@@ -24,6 +24,7 @@ import Infrastructure from "./pages/Infrastructure";
 import BreedingTracker from "./pages/BreedingTracker";
 import StrategicPlanningHub from "./pages/StrategicPlanningHub";
 import UserProfile from "./pages/UserProfile";
+import Achievements from "./pages/Achievements";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -216,6 +217,16 @@ const App = () => (
                 <ProtectedRoute>
                   <ProtectedLayout>
                     <UserProfile />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/achievements" 
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <Achievements />
                   </ProtectedLayout>
                 </ProtectedRoute>
               } 

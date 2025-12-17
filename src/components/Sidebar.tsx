@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Target, BookOpen, Heart, Sprout, Activity, Scale, Wrench, Boxes, Book, MapPin, Calendar, Compass, Users, Shield } from "lucide-react";
+import { Home, Target, BookOpen, Heart, Sprout, Activity, Scale, Wrench, Boxes, Book, MapPin, Calendar, Compass, Users, Shield, Trophy } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const navSections = [
       { title: "Overview", href: "/dashboard", icon: Home },
       { title: "Goals", href: "/goals", icon: Target },
       { title: "Journal", href: "/journal", icon: BookOpen },
+      { title: "Achievements", href: "/achievements", icon: Trophy },
     ],
   },
   {
