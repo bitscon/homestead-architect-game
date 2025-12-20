@@ -24,14 +24,17 @@ Your verification must confirm:
 Execute these commands in sequence:
 
 ```bash
-# Step 1: Clean deployment
-docker compose down
-docker compose up -d --build
-docker compose ps
+# Ensure swarm is initialized: docker swarm init (one time per host)
+# DEV_IMAGE defaults to homestead-architect-dev:latest, override if pulling from registry
 
-# Step 2: Confirm frontend port mapping
-docker port homestead-architect-game-frontend-dev-1
-# Expected output: 5173/tcp -> 0.0.0.0:8081
+# Step 1: Clean deployment
+docker stack rm homestead-architect-dev 2>/dev/null || true
+sleep 5
+docker stack deploy -c stack.dev.yml homestead-architect-dev
+
+# Step 2: Confirm frontend service port mapping
+docker service ls
+# Look for homestead-architect-dev_frontend with PORTS showing 8081
 ```
 
 ## VERIFICATION CHECKLIST
@@ -39,7 +42,7 @@ All steps are mandatory. Document results for each:
 
 ### A) Vite App Shell Check
 ```bash
-curl -s http://127.0.0.1:8081 | sed -n '1,120p'
+curl -s http://127.0.0.1:${DEV_WEB_PORT:-8081} | sed -n '1,120p'
 ```
 ✓ Must contain: 
 - `<script type="module" src="/@vite/client"></script>`
@@ -47,33 +50,33 @@ curl -s http://127.0.0.1:8081 | sed -n '1,120p'
 
 ### B) JavaScript Entry Module Check
 ```bash
-curl -sI http://127.0.0.1:8081/src/main.tsx
+curl -sI http://127.0.0.1:${DEV_WEB_PORT:-8081}/src/main.tsx
 ```
 ✓ Expected: HTTP/1.1 200 OK
 
 ### C) Environment Variables Check
 ```bash
-docker exec -it homestead-architect-game-frontend-dev-1 sh -lc 'printenv | sort | grep -E "VITE_SUPABASE_URL|VITE_SUPABASE_ANON_KEY"'
+docker exec -it $(docker ps --filter "name=homestead-architect-dev_frontend" -q | head -n1) sh -lc 'printenv | sort | grep -E "VITE_SUPABASE_URL|VITE_SUPABASE_ANON_KEY"'
 ```
 ✓ Expected: Both variables present with non-empty values
 
 ### D) Supabase Auth Endpoint Check
 ```bash
-docker exec -it homestead-architect-game-frontend-dev-1 sh -lc '
+docker exec -it $(docker ps --filter "name=homestead-architect-dev_frontend" -q | head -n1) sh -lc '
 node -e "
-fetch(process.env.VITE_SUPABASE_URL + \"/auth/v1/settings\", {
-  headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY }
-}).then(async r => console.log(r.status, (await r.text()).slice(0,200)))
- .catch(e => console.error(e));
+fetch(process.env.VITE_SUPABASE_URL + \"/auth/v1/settings\", { headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY } })
+  .then(async r => console.log(r.status, (await r.text()).slice(0,200)))
+  .catch(e => console.error(e));
 "
 '
 ```
+
 ✓ Expected: 200 status (NOT 401 "No API key found")
 - 401 indicates reverse proxy misconfiguration or header stripping
 
 ### E) Runtime Error Check
 ```bash
-docker logs -f homestead-architect-game-frontend-dev-1
+docker service logs -f homestead-architect-dev_frontend
 ```
 Then load http://[server-ip]:8081 in browser while monitoring logs
 
@@ -91,7 +94,7 @@ Confirm:
 [SUCCESS/FAILURE]
 
 ## Containers Status
-[docker compose ps output]
+[docker service ls output]
 
 ## Verification Results
 A) Vite App Shell: [PASS/FAIL]

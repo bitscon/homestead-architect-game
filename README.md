@@ -1,95 +1,63 @@
-# Welcome to your Lovable project
+# Homestead Architect
 
-## Project info
+Modern farm management dashboard built with Vite, React 18, shadcn/ui, and Supabase.
 
-**URL**: https://lovable.dev/projects/11a749b6-e7d5-42c3-ad64-284b3ce6f02c
+## Prerequisites
+- Node.js 20+
+- npm 10+
+- Docker 24+
+- Docker Swarm (for stack deployments)
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/11a749b6-e7d5-42c3-ad64-284b3ce6f02c) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Local Development
+```bash
+cp .env.example .env.dev   # fill with Supabase dev URL + anon key
+npm install
 npm run dev
 ```
+The dev server runs on http://localhost:5173.
 
-**Edit a file directly in GitHub**
+## Docker Dev Stack (Swarm)
+```bash
+cp .env.example .env.dev
+# optional: add POSTGRES_* overrides if you want the local Postgres container
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# initialize swarm once
+# docker swarm init
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/11a749b6-e7d5-42c3-ad64-284b3ce6f02c) and click on Share -> Publish.
-
-## Run in Docker
-
-This application can be containerized and run using Docker:
-
-### 1. Build the image:
-```sh
-docker build -t homestead-web:latest .
+docker stack deploy -c stack.dev.yml homestead-architect-dev
 ```
+Services:
+- `frontend` → Vite dev build on port 8081
+- `postgres` → optional local database (port exposed inside cluster)
+- `pgadmin` → port 5050
 
-### 2. Run the container:
-```sh
-docker run -d --name homestead-web -p 8081:80 \
-  -e VITE_SUPABASE_URL=https://your-supabase-url \
-  -e VITE_SUPABASE_ANON_KEY=your-anon-key \
-  homestead-web:latest
+See `testscripts/build-deploy-dev.txt` for verification steps.
+
+## Production Build & Deploy
+1. Create `.env.prod` (never commit). See `.env.prod.example` for required vars.
+2. Validate Supabase schema:
+   ```bash
+   node scripts/validate-supabase-prod.mjs
+   ```
+3. Build/push the frontend image:
+   ```bash
+   VERSION=$(date +"%Y%m%d%H%M")
+   docker build -t registry.example.com/homestead-architect:prod-${VERSION} -f Dockerfile .
+   docker push registry.example.com/homestead-architect:prod-${VERSION}
+   ```
+4. Deploy with Portainer or CLI:
+   ```bash
+   docker stack deploy -c stack.prod.yml homestead-architect-prod
+   ```
+5. Run the verification checklist in `testscripts/build-deploy-prod.txt` (curl checks, env vars, Supabase auth, UI smoke test).
+
+## Documentation
+- `DEPLOYMENT_PLAYBOOK.md` – complete Dev/Prod runbook.
+- `scripts/validate-supabase-prod.mjs` – schema guard.
+- `stack.dev.yml` / `stack.prod.yml` – Swarm stack definitions.
+
+## Testing & Linting
+```bash
+npm run lint
+npm run build
 ```
-
-### 3. Open the app:
-Visit http://localhost:8081
-
-**Note:** In production, this app will be served at https://homesteadarchitect.com
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

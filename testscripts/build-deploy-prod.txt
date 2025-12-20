@@ -1,0 +1,194 @@
+# Production Build & Deployment Checklist
+
+## Pre-Deployment Checklist
+- [ ] Production `.env.prod` file exists with proper values
+- [ ] Production Supabase database is accessible and has required schema
+- [ ] Run `node scripts/validate-supabase-prod.mjs` to verify Supabase readiness
+- [ ] Docker Swarm cluster is running and healthy
+- [ ] Portainer is accessible and has Swarm management permissions
+
+## Build & Push Production Image
+
+### 1. Set Environment Variables
+```bash
+export REGISTRY_URL=your-registry.com
+export IMAGE_NAME=homestead-architect-prod
+export VERSION=v1.0.0  # Use git tag or commit hash
+export FULL_IMAGE_TAG=${REGISTRY_URL}/${IMAGE_NAME}:${VERSION}
+```
+
+### 2. Build Production Image
+```bash
+# Build optimized production image
+docker build -f Dockerfile -t ${FULL_IMAGE_TAG} .
+
+# Scan image for vulnerabilities (optional)
+docker scan ${FULL_IMAGE_TAG}
+```
+
+### 3. Push to Registry
+```bash
+docker push ${FULL_IMAGE_TAG}
+```
+
+## Deploy to Production
+
+### 1. Prepare Production Environment
+```bash
+# Create production directory on manager node
+mkdir -p /opt/homestead-architect-prod
+cd /opt/homestead-architect-prod
+
+# Copy required files (or clone repo)
+# - stack.prod.yml
+# - .env.prod (manual creation from template)
+# - scripts/validate-supabase-prod.mjs (for validation)
+```
+
+### 2. Create Production Environment File
+```bash
+# Create .env.prod from template
+cp .env.prod.example .env.prod
+# Edit .env.prod with actual production values
+nano .env.prod
+
+# Set production image tag
+export PROD_IMAGE=${FULL_IMAGE_TAG}
+echo "PROD_IMAGE=${PROD_IMAGE}" >> .env.prod
+```
+
+### 3. Validate Production Environment
+```bash
+# Test Supabase connectivity
+node scripts/validate-supabase-prod.mjs
+
+# Validate stack file syntax
+docker stack config -c stack.prod.yml
+```
+
+### 4. Deploy Production Stack via Portainer
+1. Login to Portainer web interface
+2. Navigate to "Stacks" in the Swarm section
+3. Click "Add stack"
+4. Set stack name: `homestead-architect-prod`
+5. Select "Web editor" and paste contents of `stack.prod.yml`
+6. Set environment variables from `.env.prod`:
+   - `PROD_IMAGE=${FULL_IMAGE_TAG}`
+   - `PROD_WEB_PORT=8080`
+   - `VITE_SUPABASE_URL=https://supabase.bitscon.net`
+   - `VITE_SUPABASE_ANON_KEY=your_anon_key`
+7. Click "Deploy the stack"
+
+### Alternative: CLI Deployment
+```bash
+# Deploy stack via CLI (if available on manager node)
+docker stack deploy -c stack.prod.yml homestead-architect-prod
+```
+
+## Post-Deployment Verification
+
+### 1. Check Service Status
+```bash
+# Verify services are running
+docker service ls | grep homestead-architect-prod
+
+# Check service replicas
+docker service ps homestead-architect-prod_frontend
+```
+
+### 2. Health Checks
+```bash
+# Test application accessibility
+curl -I http://localhost:${PROD_WEB_PORT:-8080}
+
+# Test Supabase connectivity
+curl -I http://localhost:${PROD_WEB_PORT:-8080}/api/health  # if health endpoint exists
+```
+
+### 3. Log Monitoring
+```bash
+# View service logs
+docker service logs homestead-architect-prod_frontend --tail=100
+
+# Monitor for errors
+docker service logs homestead-architect-prod_frontend --since=5m | grep -i error
+```
+
+### 4. Application Testing
+- [ ] Application loads in browser
+- [ ] User authentication works
+- [ ] Database operations (CRUD) functional
+- [ ] No console errors in browser dev tools
+- [ ] Mobile responsive design works
+- [ ] Performance metrics acceptable
+
+## Rollback Procedures
+
+### Immediate Rollback
+1. In Portainer:
+   - Navigate to stack `homestead-architect-prod`
+   - Click "Editor" and modify `PROD_IMAGE` to previous version
+   - Click "Update the stack"
+
+### CLI Rollback
+```bash
+# Update with previous image tag
+export PREVIOUS_IMAGE_TAG=${REGISTRY_URL}/${IMAGE_NAME}:v0.9.0
+export PROD_IMAGE=${PREVIOUS_IMAGE_TAG}
+docker stack deploy -c stack.prod.yml homestead-architect-prod
+```
+
+### Full Stack Removal
+```bash
+# Remove entire stack (emergency)
+docker stack rm homestead-architect-prod
+
+# Wait for services to be removed
+docker service ls | grep homestead-architect-prod
+```
+
+## Monitoring & Maintenance
+
+### Regular Health Checks
+```bash
+# Daily service status
+docker service ls
+
+# Weekly image updates
+docker pull ${REGISTRY_URL}/${IMAGE_NAME}:latest
+```
+
+### Log Analysis
+```bash
+# Export logs for analysis
+docker service logs homestead-architect-prod_frontend > production-logs.txt
+
+# Monitor resource usage
+docker stats --no-stream
+```
+
+### Security
+- [ ] Regular image vulnerability scanning
+- [ ] SSL certificate monitoring
+- [ ] Database access review
+- [ ] Environment variable security audit
+
+## Troubleshooting
+
+### Common Issues
+1. **Service not starting**: Check image tag and registry access
+2. **Database connection errors**: Verify Supabase URL and keys
+3. **Port conflicts**: Ensure `PROD_WEB_PORT` is available
+4. **High memory usage**: Check resource limits in stack file
+
+### Debug Commands
+```bash
+# Shell into running container (if needed)
+docker run -it --rm ${PROD_IMAGE} sh
+
+# Inspect service configuration
+docker service inspect homestead-architect-prod_frontend
+
+# Check network connectivity
+docker network inspect homestead-architect-prod_homestead-network
+```
