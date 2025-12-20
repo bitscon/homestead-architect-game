@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface InfrastructureProject {
   id: string;
@@ -29,7 +30,7 @@ export interface InfrastructureProjectInsert {
 export async function getInfrastructureProjects(
   userId: string
 ): Promise<InfrastructureProject[]> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("infrastructure")
     .select("*")
     .eq("user_id", userId)
@@ -43,7 +44,7 @@ export async function createInfrastructureProject(
   userId: string,
   project: InfrastructureProjectInsert
 ): Promise<InfrastructureProject> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("infrastructure")
     .insert({
       user_id: userId,
@@ -61,7 +62,7 @@ export async function updateInfrastructureProject(
   userId: string,
   project: Partial<InfrastructureProjectInsert>
 ): Promise<InfrastructureProject> {
-  const { data, error} = await (supabase as any)
+  const { data, error} = await supabase
     .from("infrastructure")
     .update(project)
     .eq("id", id)
@@ -77,7 +78,7 @@ export async function deleteInfrastructureProject(
   id: string,
   userId: string
 ): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("infrastructure")
     .delete()
     .eq("id", id)

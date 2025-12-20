@@ -12,6 +12,7 @@ import { GoalUpdateModal } from '@/features/goals/GoalUpdateModal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import {
   getGoals,
   createGoal,
@@ -44,7 +45,7 @@ const HomesteadGoals = () => {
     queryKey: ['all-goal-updates', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('goal_updates')
         .select('*')
         .eq('user_id', user.id)

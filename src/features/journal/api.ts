@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface JournalEntry {
   id: string;
@@ -35,7 +36,7 @@ export const getJournalEntries = async (
   userId: string,
   propertyId?: string
 ): Promise<JournalEntry[]> => {
-  let query = (supabase as any)
+  let query = supabase
     .from('journal_entries')
     .select('*')
     .eq('user_id', userId)
@@ -54,7 +55,7 @@ export const getJournalEntries = async (
 export const createJournalEntry = async (
   data: JournalEntryInsert
 ): Promise<JournalEntry> => {
-  const { data: entry, error } = await (supabase as any)
+  const { data: entry, error } = await supabase
     .from('journal_entries')
     .insert(data)
     .select()
@@ -75,7 +76,7 @@ export const updateJournalEntry = async (
     throw new Error('User must be authenticated to update a journal entry');
   }
 
-  const { data: entry, error } = await (supabase as any)
+  const { data: entry, error } = await supabase
     .from('journal_entries')
     .update(data)
     .eq('id', id)
@@ -95,7 +96,7 @@ export const deleteJournalEntry = async (id: string): Promise<void> => {
     throw new Error('User must be authenticated to delete a journal entry');
   }
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('journal_entries')
     .delete()
     .eq('id', id)

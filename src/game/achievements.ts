@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface Achievement {
   id: string;
@@ -77,7 +78,7 @@ export async function getUserAchievements(): Promise<UserAchievement[]> {
     const userId = await getCurrentUserId();
     if (!userId) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('user_achievements')
       .select('*')
       .eq('user_id', userId)
@@ -132,7 +133,7 @@ export async function checkAndAwardAchievements(
       }
 
       if (shouldUnlock) {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('user_achievements')
           .insert({
             user_id: userId,
@@ -161,7 +162,7 @@ export async function getActionCounts(): Promise<Record<string, number>> {
     const userId = await getCurrentUserId();
     if (!userId) return {};
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('xp_events')
       .select('action')
       .eq('user_id', userId);

@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
@@ -88,7 +89,7 @@ const UserProfile = () => {
       setUser(authUser);
       
       // Fetch profile
-      const { data: profileData, error: profileError } = await (supabase as any)
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
@@ -146,7 +147,7 @@ const UserProfile = () => {
       setIsSaving(true);
       
       // Fetch existing profile first to preserve non-editable fields
-      const { data: existingProfile, error: fetchError } = await (supabase as any)
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('role, subscription_status, plan_type, subscription_id, trial_start_date, trial_end_date')
         .eq('id', user.id)
@@ -183,7 +184,7 @@ const UserProfile = () => {
       };
       
       // Upsert profile (insert or update)
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('profiles')
         .upsert(profileData, {
           onConflict: 'id'
@@ -330,7 +331,7 @@ const UserProfile = () => {
         .getPublicUrl(filePath);
 
       // Fetch existing profile to preserve non-editable fields
-      const { data: existingProfile, error: fetchError } = await (supabase as any)
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -339,7 +340,7 @@ const UserProfile = () => {
       if (fetchError) throw fetchError;
 
       // Update profile with new avatar URL
-      const { error: updateError } = await (supabase as any)
+      const { error: updateError } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface LeaderboardEntry {
   user_id: string;
@@ -30,7 +31,7 @@ async function getCurrentUserId(): Promise<string | null> {
 export async function getLeaderboard(limit: number = 20): Promise<LeaderboardEntry[]> {
   try {
     // First get users who opted into the leaderboard
-    const { data: privacyData, error: privacyError } = await (supabase as any)
+    const { data: privacyData, error: privacyError } = await supabase
       .from('user_privacy_settings')
       .select('user_id, display_name')
       .eq('show_on_leaderboard', true);
@@ -48,7 +49,7 @@ export async function getLeaderboard(limit: number = 20): Promise<LeaderboardEnt
     const displayNameMap = new Map(privacyData.map((p: any) => [p.user_id, p.display_name]));
 
     // Get stats for opted-in users
-    const { data: statsData, error: statsError } = await (supabase as any)
+    const { data: statsData, error: statsError } = await supabase
       .from('user_stats')
       .select('user_id, total_xp, level')
       .in('user_id', userIds)
@@ -81,7 +82,7 @@ export async function getUserPrivacySettings(): Promise<UserPrivacySettings | nu
     const userId = await getCurrentUserId();
     if (!userId) return null;
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('user_privacy_settings')
       .select('*')
       .eq('user_id', userId)
@@ -110,7 +111,7 @@ export async function updateUserPrivacySettings(
     const userId = await getCurrentUserId();
     if (!userId) return false;
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('user_privacy_settings')
       .upsert({
         user_id: userId,
@@ -141,7 +142,7 @@ export async function getUserRank(): Promise<number | null> {
     if (!userId) return null;
 
     // Get all user stats ordered by XP
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('user_stats')
       .select('user_id, total_xp')
       .order('total_xp', { ascending: false });

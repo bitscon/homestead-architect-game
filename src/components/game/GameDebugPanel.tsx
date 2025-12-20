@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getUserStats } from '@/game/gameEngine';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Bug } from 'lucide-react';
@@ -35,7 +36,7 @@ export const GameDebugPanel = () => {
       if (!user) return;
 
       // Fetch recent XP events
-      const { data: eventsData, error } = await (supabase as any)
+      const { data: eventsData, error } = await supabase
         .from('xp_events')
         .select('id, action, xp, created_at, metadata')
         .eq('user_id', user.id)

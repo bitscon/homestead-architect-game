@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { checkAndAwardAchievements, getActionCounts, Achievement } from './achievements';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
 
 // Store callback for achievement notifications
 let achievementNotificationCallback: ((achievements: Achievement[]) => void) | null = null;
@@ -79,7 +80,7 @@ export async function awardXP(
     }
 
     // Insert XP event
-    const { error: eventError } = await (supabase as any)
+    const { error: eventError } = await supabase
       .from('xp_events')
       .insert({
         user_id: userId,
@@ -94,7 +95,7 @@ export async function awardXP(
     }
 
     // Fetch current user stats
-    const { data: currentStats, error: fetchError } = await (supabase as any)
+    const { data: currentStats, error: fetchError } = await supabase
       .from('user_stats')
       .select('total_xp')
       .eq('user_id', userId)
@@ -110,7 +111,7 @@ export async function awardXP(
     const newLevel = computeLevel(newTotalXp);
 
     // Upsert user stats
-    const { error: upsertError } = await (supabase as any)
+    const { error: upsertError } = await supabase
       .from('user_stats')
       .upsert({
         user_id: userId,
@@ -159,7 +160,7 @@ export async function getUserStats(): Promise<{ totalXp: number; level: number }
       return { totalXp: 0, level: 1 };
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('user_stats')
       .select('total_xp, level')
       .eq('user_id', userId)

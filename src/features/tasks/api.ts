@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface Task {
   id: string;
@@ -31,7 +32,7 @@ export interface TaskUpdate {
 }
 
 export async function getTasks(userId: string, propertyId?: string) {
-  let query = (supabase as any)
+  let query = supabase
     .from('tasks')
     .select('*')
     .eq('user_id', userId)
@@ -48,7 +49,7 @@ export async function getTasks(userId: string, propertyId?: string) {
 }
 
 export async function getTask(id: string, userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('tasks')
     .select('*')
     .eq('id', id)
@@ -60,7 +61,7 @@ export async function getTask(id: string, userId: string) {
 }
 
 export async function createTask(userId: string, task: TaskInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('tasks')
     .insert({
       ...task,
@@ -74,7 +75,7 @@ export async function createTask(userId: string, task: TaskInsert) {
 }
 
 export async function updateTask(id: string, userId: string, task: TaskUpdate) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('tasks')
     .update(task)
     .eq('id', id)
@@ -87,7 +88,7 @@ export async function updateTask(id: string, userId: string, task: TaskUpdate) {
 }
 
 export async function deleteTask(id: string, userId: string) {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('tasks')
     .delete()
     .eq('id', id)

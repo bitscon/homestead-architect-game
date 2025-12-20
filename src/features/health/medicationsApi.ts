@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface Medication {
   id: string;
@@ -26,7 +27,7 @@ export interface MedicationInsert {
 }
 
 export async function getMedications(userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('medications')
     .select('*')
     .or(`user_id.eq.${userId},user_id.is.null`)
@@ -37,7 +38,7 @@ export async function getMedications(userId: string) {
 }
 
 export async function getMedication(id: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('medications')
     .select('*')
     .eq('id', id)
@@ -48,7 +49,7 @@ export async function getMedication(id: string) {
 }
 
 export async function createMedication(userId: string, medication: MedicationInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('medications')
     .insert({
       ...medication,
@@ -62,7 +63,7 @@ export async function createMedication(userId: string, medication: MedicationIns
 }
 
 export async function updateMedication(id: string, medication: Partial<MedicationInsert>) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('medications')
     .update(medication)
     .eq('id', id)
@@ -81,7 +82,7 @@ export async function deleteMedication(id: string) {
     throw new Error('User must be authenticated to delete a medication');
   }
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('medications')
     .delete()
     .eq('id', id)

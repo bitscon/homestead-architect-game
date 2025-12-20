@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.env.local
+.env.production

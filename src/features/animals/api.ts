@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface Animal {
   id: string;
@@ -43,7 +44,7 @@ export interface AnimalUpdate {
 }
 
 export async function getAnimals(userId: string, propertyId?: string) {
-  let query = (supabase as any)
+  let query = supabase
     .from('animals')
     .select('*')
     .eq('user_id', userId)
@@ -60,7 +61,7 @@ export async function getAnimals(userId: string, propertyId?: string) {
 }
 
 export async function getAnimal(id: string, userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('animals')
     .select('*')
     .eq('id', id)
@@ -72,7 +73,7 @@ export async function getAnimal(id: string, userId: string) {
 }
 
 export async function createAnimal(userId: string, animal: AnimalInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('animals')
     .insert({
       ...animal,
@@ -86,7 +87,7 @@ export async function createAnimal(userId: string, animal: AnimalInsert) {
 }
 
 export async function updateAnimal(id: string, userId: string, animal: AnimalUpdate) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('animals')
     .update(animal)
     .eq('id', id)
@@ -99,7 +100,7 @@ export async function updateAnimal(id: string, userId: string, animal: AnimalUpd
 }
 
 export async function deleteAnimal(id: string, userId: string) {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('animals')
     .delete()
     .eq('id', id)

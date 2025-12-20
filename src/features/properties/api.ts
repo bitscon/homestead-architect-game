@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface Property {
   id: string;
@@ -38,7 +39,7 @@ export interface PropertyUpdate {
 }
 
 export async function getProperties(userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('properties')
     .select('*')
     .eq('user_id', userId)
@@ -49,7 +50,7 @@ export async function getProperties(userId: string) {
 }
 
 export async function getPropertyById(id: string, userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('properties')
     .select('*')
     .eq('id', id)
@@ -61,7 +62,7 @@ export async function getPropertyById(id: string, userId: string) {
 }
 
 export async function createProperty(userId: string, property: PropertyInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('properties')
     .insert({
       ...property,
@@ -75,7 +76,7 @@ export async function createProperty(userId: string, property: PropertyInsert) {
 }
 
 export async function updateProperty(id: string, userId: string, property: PropertyUpdate) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('properties')
     .update(property)
     .eq('id', id)
@@ -88,7 +89,7 @@ export async function updateProperty(id: string, userId: string, property: Prope
 }
 
 export async function deleteProperty(id: string, userId: string) {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('properties')
     .delete()
     .eq('id', id)

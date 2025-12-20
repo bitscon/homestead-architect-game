@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import type { Crop } from '@/types/crops';
 
 export type CropOption = Crop;
@@ -9,7 +10,7 @@ export type CropOption = Crop;
  */
 export const fetchCropsFromDatabase = async (): Promise<CropOption[] | null> => {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('crops')
       .select('id, name')
       .order('name', { ascending: true });

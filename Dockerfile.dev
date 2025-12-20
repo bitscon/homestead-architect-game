@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies first to leverage Docker layer caching
+COPY package*.json ./
+RUN npm ci --only=development && \
+    chown -R node:node /app/node_modules
+
+# Copy rest of application
+COPY . .
+
+# Create temp directories with proper permissions
+RUN mkdir -p /app/tmp /app/.vite /app/node_modules/.vite && \
+    chown -R node:node /app/tmp /app/.vite /app/node_modules/.vite && \
+    chmod -R 755 /app
+
+USER node
+
+EXPOSE 8080
+
+CMD ["npm", "run", "dev"]

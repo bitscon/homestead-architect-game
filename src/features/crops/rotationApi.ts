@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import type { CropRotation } from '@/types/crops';
 
 export type RotationPlan = CropRotation;
@@ -31,7 +32,7 @@ export interface UpdateRotationPlanData {
  * Fetch all rotation plans for a specific user
  */
 export const getRotationPlans = async (userId: string): Promise<RotationPlan[]> => {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('crop_rotations')
     .select('*')
     .eq('user_id', userId)
@@ -59,7 +60,7 @@ export const createRotationPlan = async (
     throw new Error('User must be authenticated to create a rotation plan');
   }
 
-  const { data: newPlan, error } = await (supabase as any)
+  const { data: newPlan, error } = await supabase
     .from('crop_rotations')
     .insert({
       user_id: user.id,
@@ -98,7 +99,7 @@ export const updateRotationPlan = async (
     throw new Error('User must be authenticated to update a rotation plan');
   }
 
-  const { data: updatedPlan, error } = await (supabase as any)
+  const { data: updatedPlan, error } = await supabase
     .from('crop_rotations')
     .update(data)
     .eq('id', id)
@@ -125,7 +126,7 @@ export const deleteRotationPlan = async (id: string): Promise<void> => {
     throw new Error('User must be authenticated to delete a rotation plan');
   }
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('crop_rotations')
     .delete()
     .eq('id', id)

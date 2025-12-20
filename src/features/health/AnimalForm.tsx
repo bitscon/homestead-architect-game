@@ -61,7 +61,9 @@ export function AnimalForm({ open, onOpenChange, animal, properties, onSubmit }:
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      // Error handling is done in parent component
+      console.error('Failed to submit animal:', error);
+      // Optionally: toast.error('Failed to save animal');
+      throw error; // Re-throw for parent component handling
     }
   };
 
@@ -223,8 +225,12 @@ export function AnimalForm({ open, onOpenChange, animal, properties, onSubmit }:
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {animal ? 'Update Animal' : 'Add Animal'}
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? (
+                  <>Updating...</>
+                ) : (
+                  <>{animal ? 'Update Animal' : 'Add Animal'}</>
+                )}
               </Button>
             </div>
           </form>

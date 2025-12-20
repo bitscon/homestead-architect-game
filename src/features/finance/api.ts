@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import type {
   FinancialCategory,
   CategoryInsert,
@@ -11,7 +12,7 @@ import type {
 
 // Category API
 export async function getCategories(userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('financial_categories')
     .select('*')
     .eq('user_id', userId)
@@ -22,7 +23,7 @@ export async function getCategories(userId: string) {
 }
 
 export async function createCategory(userId: string, category: CategoryInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('financial_categories')
     .insert({
       ...category,
@@ -36,7 +37,7 @@ export async function createCategory(userId: string, category: CategoryInsert) {
 }
 
 export async function updateCategory(id: string, userId: string, category: CategoryUpdate) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('financial_categories')
     .update(category)
     .eq('id', id)
@@ -49,7 +50,7 @@ export async function updateCategory(id: string, userId: string, category: Categ
 }
 
 export async function deleteCategory(id: string, userId: string) {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('financial_categories')
     .delete()
     .eq('id', id)
@@ -60,7 +61,7 @@ export async function deleteCategory(id: string, userId: string) {
 
 // Transaction API
 export async function getTransactions(userId: string, filters?: TransactionFilters) {
-  let query = (supabase as any)
+  let query = supabase
     .from('transactions')
     .select('*')
     .eq('user_id', userId)
@@ -89,7 +90,7 @@ export async function getTransactions(userId: string, filters?: TransactionFilte
 }
 
 export async function createTransaction(userId: string, transaction: TransactionInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('transactions')
     .insert({
       ...transaction,
@@ -103,7 +104,7 @@ export async function createTransaction(userId: string, transaction: Transaction
 }
 
 export async function updateTransaction(id: string, userId: string, transaction: TransactionUpdate) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('transactions')
     .update(transaction)
     .eq('id', id)
@@ -116,7 +117,7 @@ export async function updateTransaction(id: string, userId: string, transaction:
 }
 
 export async function deleteTransaction(id: string, userId: string) {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('transactions')
     .delete()
     .eq('id', id)

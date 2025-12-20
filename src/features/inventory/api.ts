@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface InventoryItem {
   id: string;
@@ -28,7 +29,7 @@ export interface InventoryItemUpdate {
 }
 
 export async function getInventory(userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('inventory_items')
     .select('*')
     .eq('user_id', userId)
@@ -39,7 +40,7 @@ export async function getInventory(userId: string) {
 }
 
 export async function getInventoryItem(id: string, userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('inventory_items')
     .select('*')
     .eq('id', id)
@@ -51,7 +52,7 @@ export async function getInventoryItem(id: string, userId: string) {
 }
 
 export async function createInventoryItem(userId: string, item: InventoryItemInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('inventory_items')
     .insert({
       ...item,
@@ -65,7 +66,7 @@ export async function createInventoryItem(userId: string, item: InventoryItemIns
 }
 
 export async function updateInventoryItem(id: string, userId: string, item: InventoryItemUpdate) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('inventory_items')
     .update(item)
     .eq('id', id)
@@ -78,7 +79,7 @@ export async function updateInventoryItem(id: string, userId: string, item: Inve
 }
 
 export async function deleteInventoryItem(id: string, userId: string) {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('inventory_items')
     .delete()
     .eq('id', id)

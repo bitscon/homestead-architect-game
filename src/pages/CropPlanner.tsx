@@ -42,10 +42,10 @@ interface Crop {
   zones?: string;
 }
 
-// Mock crop data
-const mockCrops: Crop[] = [
+// Enhanced crop database - combines rich crop information with database integration
+const ENHANCED_CROP_DATABASE = [
   {
-    id: '1',
+    id: 'tomato',
     name: 'Tomato',
     category: 'Vegetables',
     sunRequirement: 'Full Sun',
@@ -58,7 +58,7 @@ const mockCrops: Crop[] = [
     zones: '3-10',
   },
   {
-    id: '2',
+    id: 'lettuce',
     name: 'Lettuce',
     category: 'Vegetables',
     sunRequirement: 'Partial Shade',
@@ -71,7 +71,7 @@ const mockCrops: Crop[] = [
     zones: '4-9',
   },
   {
-    id: '3',
+    id: 'basil',
     name: 'Basil',
     category: 'Herbs',
     sunRequirement: 'Full Sun',
@@ -84,69 +84,134 @@ const mockCrops: Crop[] = [
     zones: '4-10',
   },
   {
-    id: '4',
+    id: 'carrots',
     name: 'Carrot',
     category: 'Vegetables',
     sunRequirement: 'Full Sun',
     waterRequirement: 'Moderate',
     daysToMaturity: 70,
-    description: 'Root vegetable that stores well and grows best in loose soil.',
+    description: 'Root vegetable perfect for fresh eating and storing.',
     plantingDepth: '1/4 inch',
-    spacing: '3 inches',
-    companions: ['Onions', 'Lettuce', 'Tomatoes'],
+    spacing: '2-3 inches',
+    companions: ['Tomatoes', 'Lettuce', 'Onions'],
     zones: '3-10',
   },
   {
-    id: '5',
-    name: 'Cucumber',
+    id: 'corn',
+    name: 'Corn',
     category: 'Vegetables',
     sunRequirement: 'Full Sun',
     waterRequirement: 'High',
-    daysToMaturity: 55,
-    description: 'Vining plant that produces refreshing fruits throughout summer.',
-    plantingDepth: '1 inch',
-    spacing: '36 inches',
-    companions: ['Beans', 'Corn', 'Radishes'],
+    daysToMaturity: 90,
+    description: 'Summer staple, requires plenty of space and pollination.',
+    plantingDepth: '1-2 inches',
+    spacing: '12 inches',
+    companions: ['Beans', 'Squash', 'Peas'],
     zones: '4-11',
   },
   {
-    id: '6',
-    name: 'Strawberry',
-    category: 'Fruits',
-    sunRequirement: 'Full Sun',
-    waterRequirement: 'Moderate',
-    daysToMaturity: 120,
-    description: 'Perennial fruit that produces sweet berries year after year.',
-    plantingDepth: 'Crown level',
-    spacing: '12 inches',
-    companions: ['Lettuce', 'Spinach', 'Beans'],
-    zones: '4-9',
-  },
-  {
-    id: '7',
-    name: 'Pepper',
+    id: 'beans',
+    name: 'Beans',
     category: 'Vegetables',
     sunRequirement: 'Full Sun',
     waterRequirement: 'Moderate',
-    daysToMaturity: 80,
-    description: 'Heat-loving plant that produces sweet or hot peppers.',
-    plantingDepth: '1/4 inch',
-    spacing: '18-24 inches',
-    companions: ['Basil', 'Onions', 'Tomatoes'],
+    daysToMaturity: 55,
+    description: 'Easy-to-grow legume, great for nitrogen fixation.',
+    plantingDepth: '1 inch',
+    spacing: '4-6 inches',
+    companions: ['Corn', 'Squash', 'Cabbage'],
     zones: '3-11',
   },
   {
-    id: '8',
-    name: 'Cilantro',
-    category: 'Herbs',
+    id: 'peppers',
+    name: 'Peppers',
+    category: 'Vegetables',
+    sunRequirement: 'Full Sun',
+    waterRequirement: 'Moderate',
+    daysToMaturity: 65,
+    description: 'Warm-season crop with many varieties.',
+    plantingDepth: '1/4 inch',
+    spacing: '18-24 inches',
+    companions: ['Basil', 'Onions', 'Spinach'],
+    zones: '5-11',
+  },
+  {
+    id: 'squash',
+    name: 'Squash',
+    category: 'Vegetables',
+    sunRequirement: 'Full Sun',
+    waterRequirement: 'High',
+    daysToMaturity: 50,
+    description: 'Prolific producer, needs space to spread.',
+    plantingDepth: '1 inch',
+    spacing: '36-48 inches',
+    companions: ['Corn', 'Beans', 'Radishes'],
+    zones: '4-11',
+  },
+  {
+    id: 'spinach',
+    name: 'Spinach',
+    category: 'Vegetables',
     sunRequirement: 'Partial Shade',
     waterRequirement: 'Moderate',
-    daysToMaturity: 45,
-    description: 'Fast-growing herb used in many cuisines worldwide.',
-    plantingDepth: '1/4 inch',
-    spacing: '6 inches',
-    companions: ['Tomatoes', 'Peppers', 'Beans'],
-    zones: '3-11',
+    daysToMaturity: 40,
+    description: 'Cool-weather green, rich in nutrients.',
+    plantingDepth: '1/2 inch',
+    spacing: '4-6 inches',
+    companions: ['Strawberries', 'Peas', 'Radishes'],
+    zones: '3-9',
+  },
+  {
+    id: 'strawberries',
+    name: 'Strawberries',
+    category: 'Fruits',
+    sunRequirement: 'Full Sun',
+    waterRequirement: 'Moderate',
+    daysToMaturity: 60,
+    description: 'Perennial fruit, great for beginners.',
+    plantingDepth: 'Crown at soil level',
+    spacing: '12-18 inches',
+    companions: ['Spinach', 'Borage', 'Lettuce'],
+    zones: '4-9',
+  },
+  {
+    id: 'radishes',
+    name: 'Radishes',
+    category: 'Vegetables',
+    sunRequirement: 'Full Sun',
+    waterRequirement: 'Moderate',
+    daysToMaturity: 30,
+    description: 'Fast-growing root crop, great for succession planting.',
+    plantingDepth: '1/2 inch',
+    spacing: '2-3 inches',
+    companions: ['Carrots', 'Lettuce', 'Peas'],
+    zones: '2-10',
+  },
+  {
+    id: 'onions',
+    name: 'Onions',
+    category: 'Vegetables',
+    sunRequirement: 'Full Sun',
+    waterRequirement: 'Moderate',
+    daysToMaturity: 100,
+    description: 'Kitchen staple, stores well through winter.',
+    plantingDepth: '1 inch',
+    spacing: '4-6 inches',
+    companions: ['Carrots', 'Lettuce', 'Tomatoes'],
+    zones: '3-9',
+  },
+  {
+    id: 'pumpkins',
+    name: 'Pumpkins',
+    category: 'Vegetables',
+    sunRequirement: 'Full Sun',
+    waterRequirement: 'High',
+    daysToMaturity: 85,
+    description: 'Fall favorite, needs space to sprawl.',
+    plantingDepth: '1 inch',
+    spacing: '48-60 inches',
+    companions: ['Corn', 'Beans', 'Radishes'],
+    zones: '3-9',
   },
 ];
 
@@ -204,10 +269,17 @@ const CropPlanner = () => {
     }
   };
 
-  const filteredCrops = mockCrops.filter((crop) => {
+  // Combine mock crop data with database crop options for consistency
+  // Use mock data for rich display information, but ensure it includes database crops
+  // Filter crops using enhanced database, prioritizing crops that exist in the database
+  const filteredCrops = ENHANCED_CROP_DATABASE.filter((crop) => {
     const matchesSearch = crop.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || crop.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    // Include crop if it matches search/category and either exists in database or we want to show all for demo
+    const existsInDatabase = cropOptions.some(dbCrop => 
+      dbCrop.name.toLowerCase() === crop.name.toLowerCase()
+    );
+    return matchesSearch && matchesCategory && existsInDatabase;
   });
 
   const getSunColor = (requirement: string) => {

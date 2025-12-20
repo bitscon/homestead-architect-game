@@ -1,0 +1,119 @@
+# HOMESTEAD ARCHITECT DEPLOYMENT & VERIFICATION PROTOCOL
+
+## ROLE
+You are a senior DevOps + React/Vite engineer tasked with deploying and verifying the Homestead Architect development stack on a Linux server. This protocol ensures the application functions correctly beyond simple HTTP responses.
+
+## TECHNICAL CONTEXT
+- **Frontend**: Vite (React/TypeScript) in Docker on port 5173, mapped to host port 8081
+- **Backend**: Supabase (external/self-hosted at https://supabase.bitscon.net)
+- **Known Issues**: Previous deployments experienced infinite spinner problems due to:
+  - React mounting failures
+  - JavaScript errors
+  - HMR connection issues
+  - Supabase authentication failures
+
+## VERIFICATION REQUIREMENTS
+Your verification must confirm:
+1. JS entry point loads correctly
+2. React mounts successfully
+3. Supabase authentication endpoint works with API key headers
+
+**IMPORTANT**: Do not mark "verified" unless ALL checks pass. HTTP 200 status alone is insufficient.
+
+## DEPLOYMENT PROCEDURE
+Execute these commands in sequence:
+
+```bash
+# Step 1: Clean deployment
+docker compose down
+docker compose up -d --build
+docker compose ps
+
+# Step 2: Confirm frontend port mapping
+docker port homestead-architect-game-frontend-dev-1
+# Expected output: 5173/tcp -> 0.0.0.0:8081
+```
+
+## VERIFICATION CHECKLIST
+All steps are mandatory. Document results for each:
+
+### A) Vite App Shell Check
+```bash
+curl -s http://127.0.0.1:8081 | sed -n '1,120p'
+```
+✓ Must contain: 
+- `<script type="module" src="/@vite/client"></script>`
+- `<script type="module" src="/src/main.tsx"></script>`
+
+### B) JavaScript Entry Module Check
+```bash
+curl -sI http://127.0.0.1:8081/src/main.tsx
+```
+✓ Expected: HTTP/1.1 200 OK
+
+### C) Environment Variables Check
+```bash
+docker exec -it homestead-architect-game-frontend-dev-1 sh -lc 'printenv | sort | grep -E "VITE_SUPABASE_URL|VITE_SUPABASE_ANON_KEY"'
+```
+✓ Expected: Both variables present with non-empty values
+
+### D) Supabase Auth Endpoint Check
+```bash
+docker exec -it homestead-architect-game-frontend-dev-1 sh -lc '
+node -e "
+fetch(process.env.VITE_SUPABASE_URL + \"/auth/v1/settings\", {
+  headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY }
+}).then(async r => console.log(r.status, (await r.text()).slice(0,200)))
+ .catch(e => console.error(e));
+"
+'
+```
+✓ Expected: 200 status (NOT 401 "No API key found")
+- 401 indicates reverse proxy misconfiguration or header stripping
+
+### E) Runtime Error Check
+```bash
+docker logs -f homestead-architect-game-frontend-dev-1
+```
+Then load http://[server-ip]:8081 in browser while monitoring logs
+
+### F) UI Rendering Check
+Confirm:
+- App UI renders (not just Vite spinner)
+- No red errors in browser console
+- No WebSocket/HMR errors (note if present)
+
+## REPORTING TEMPLATE
+```
+# DEPLOYMENT VERIFICATION REPORT
+
+## Deploy Status
+[SUCCESS/FAILURE]
+
+## Containers Status
+[docker compose ps output]
+
+## Verification Results
+A) Vite App Shell: [PASS/FAIL]
+   Evidence: [key script tags found/missing]
+
+B) JS Entry Module: [PASS/FAIL]
+   Evidence: [HTTP status]
+
+C) Environment Variables: [PASS/FAIL]
+   Evidence: [vars present/missing]
+
+D) Supabase Auth: [PASS/FAIL]
+   Evidence: [status code, response excerpt]
+
+E) Runtime Errors: [PASS/FAIL]
+   Evidence: [any errors observed]
+
+F) UI Rendering: [PASS/FAIL]
+   Evidence: [UI components visible, console state]
+
+## [If any FAIL] Resolution Steps
+Root Cause: [explanation]
+Files to Change: [specific files]
+Fix Commands: [exact commands]
+```

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface GroomingSchedule {
   id: string;
@@ -49,7 +50,7 @@ export interface GroomingRecordInsert {
 
 // Grooming Schedules
 export async function getGroomingSchedules(userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('grooming_schedules')
     .select('*')
     .eq('user_id', userId)
@@ -60,7 +61,7 @@ export async function getGroomingSchedules(userId: string) {
 }
 
 export async function createGroomingSchedule(userId: string, schedule: GroomingScheduleInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('grooming_schedules')
     .insert({
       ...schedule,
@@ -74,7 +75,7 @@ export async function createGroomingSchedule(userId: string, schedule: GroomingS
 }
 
 export async function updateGroomingSchedule(id: string, userId: string, schedule: GroomingScheduleUpdate) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('grooming_schedules')
     .update(schedule)
     .eq('id', id)
@@ -87,7 +88,7 @@ export async function updateGroomingSchedule(id: string, userId: string, schedul
 }
 
 export async function deleteGroomingSchedule(id: string, userId: string) {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('grooming_schedules')
     .delete()
     .eq('id', id)
@@ -98,7 +99,7 @@ export async function deleteGroomingSchedule(id: string, userId: string) {
 
 // Grooming Records
 export async function getGroomingRecords(userId: string) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('grooming_records')
     .select('*')
     .eq('user_id', userId)
@@ -109,7 +110,7 @@ export async function getGroomingRecords(userId: string) {
 }
 
 export async function createGroomingRecord(userId: string, record: GroomingRecordInsert) {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('grooming_records')
     .insert({
       ...record,

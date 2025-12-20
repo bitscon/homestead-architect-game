@@ -58,7 +58,9 @@ export function MedicationForm({ open, onOpenChange, medication, onSubmit }: Med
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      // Error handling is done in parent component
+      console.error('Failed to submit medication:', error);
+      // Optionally: toast.error('Failed to save medication');
+      throw error; // Re-throw for parent component handling
     }
   };
 
@@ -195,8 +197,12 @@ export function MedicationForm({ open, onOpenChange, medication, onSubmit }: Med
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {medication ? 'Update Medication' : 'Add Medication'}
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? (
+                  <>Updating...</>
+                ) : (
+                  <>{medication ? 'Update Medication' : 'Add Medication'}</>
+                )}
               </Button>
             </div>
           </form>

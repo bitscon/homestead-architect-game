@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { BreedingForm } from '@/features/breeding/BreedingForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import {
   getBreedingEvents,
   createBreedingEvent,
@@ -439,6 +439,12 @@ const BreedingTracker = () => {
             <DialogTitle>
               {selectedEvent ? 'Edit Breeding Event' : 'New Breeding Event'}
             </DialogTitle>
+            <DialogDescription>
+              {selectedEvent
+                ? 'Update the details of this breeding event.'
+                : 'Fill in the details to create a new breeding event.'
+              }
+            </DialogDescription>
           </DialogHeader>
           <BreedingForm
             event={selectedEvent}
