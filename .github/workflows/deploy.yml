@@ -1,0 +1,123 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: "Type 'deploy' to confirm deployment"
+        required: true
+        type: string
+      log_level:
+        description: "Log verbosity level"
+        required: true
+        default: "info"
+        type: choice
+        options:
+          - info
+          - debug
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm_deploy == 'deploy' }}
+    
+    steps:
+      - name: Confirm deployment
+        run: |
+          echo "🚀 Deploying Homestead Architect to production..."
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Log level: ${{ github.event.inputs.log_level }}"
+          echo "---"
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            set -e  # Exit on any error
+            
+            # Enable verbose logging if debug mode
+            if [ "${{ github.event.inputs.log_level }}" = "debug" ]; then
+              set -x
+            fi
+
+            echo "📂 Navigating to application directory..."
+            cd ${{ secrets.PROD_APP_PATH }}
+
+            echo "📥 Fetching latest code from GitHub..."
+            git fetch origin --prune
+            git checkout main
+            git pull origin main
+            
+            echo "📋 Current commit: $(git rev-parse --short HEAD)"
+            echo "📋 Commit message: $(git log -1 --pretty=%B)"
+
+            echo "🔨 Building Docker image..."
+            # Load production environment variables
+            if [ -f .env.prod ]; then
+              export $(cat .env.prod | grep -v '^#' | xargs)
+            fi
+            
+            docker build -t homestead-architect:latest -f Dockerfile .
+            docker tag homestead-architect:latest homestead-architect:backup-$(date +%Y%m%d%H%M%S)
+
+            echo "🔄 Deploying updated stack..."
+            docker stack deploy -c stack.prod.yml homestead-architect-prod
+
+            echo "⏳ Waiting for service to stabilize (30 seconds)..."
+            sleep 30
+
+            echo "🏥 Running health checks..."
+            # Check if service is running
+            if docker service ps homestead-architect-prod_frontend --filter "desired-state=running" | grep -q "Running"; then
+              echo "✅ Service is running"
+            else
+              echo "❌ Service failed to start!"
+              echo "Checking service logs..."
+              docker service logs --tail 50 homestead-architect-prod_frontend
+              exit 1
+            fi
+
+            # Optional: Check health endpoint if your app has one
+            # Uncomment and adjust URL as needed
+            # if curl -f -s http://localhost:8080/api/health > /dev/null; then
+            #   echo "✅ Health check passed"
+            # else
+            #   echo "⚠️  Health check endpoint not available"
+            # fi
+
+            echo "🧹 Cleaning up old Docker images (keeping last 3)..."
+            docker image prune -f --filter "label=app=homestead-architect" || true
+
+            echo "✅ Deployment completed successfully!"
+            echo "---"
+            echo "Service status:"
+            docker service ps homestead-architect-prod_frontend --filter "desired-state=running" --format "table {{.Name}}\t{{.CurrentState}}\t{{.Image}}"
+
+      - name: Deployment successful
+        if: success()
+        run: |
+          echo "✅ Production deployment completed successfully!"
+          echo ""
+          echo "🌐 Your application is now live"
+          echo "📊 Check service status: docker service ps homestead-architect-prod_frontend"
+          echo "📝 View logs: docker service logs -f homestead-architect-prod_frontend"
+
+      - name: Deployment failed
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo ""
+          echo "🔍 Troubleshooting steps:"
+          echo "1. SSH to server: ssh ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}"
+          echo "2. Check service logs: docker service logs homestead-architect-prod_frontend"
+          echo "3. Check service status: docker service ps homestead-architect-prod_frontend"
+          echo "4. Rollback if needed: docker service rollback homestead-architect-prod_frontend"
+          exit 1
