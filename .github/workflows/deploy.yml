@@ -59,56 +59,63 @@ jobs:
             echo "📋 Current commit: $(git rev-parse --short HEAD)"
             echo "📋 Commit message: $(git log -1 --pretty=%B)"
 
-            echo "🔨 Building Docker image..."
+            echo "🔨 Building and deploying with Docker Compose..."
             # Load production environment variables
             if [ -f .env.prod ]; then
               export $(cat .env.prod | grep -v '^#' | xargs)
             fi
             
-            docker build -t homestead-architect:latest -f Dockerfile .
-            docker tag homestead-architect:latest homestead-architect:backup-$(date +%Y%m%d%H%M%S)
+            # Stop current containers
+            echo "🛑 Stopping current containers..."
+            docker-compose -f docker-compose.yml --profile production down || true
 
-            echo "🔄 Deploying updated stack..."
-            docker stack deploy -c stack.prod.yml homestead-architect-prod
+            # Build new images
+            echo "🔨 Building Docker images..."
+            docker-compose -f docker-compose.yml --profile production build --no-cache
 
-            echo "⏳ Waiting for service to stabilize (30 seconds)..."
-            sleep 30
+            # Start updated containers
+            echo "🚀 Starting updated containers..."
+            docker-compose -f docker-compose.yml --profile production up -d
+
+            echo "⏳ Waiting for containers to stabilize (15 seconds)..."
+            sleep 15
 
             echo "🏥 Running health checks..."
-            # Check if service is running
-            if docker service ps homestead-architect-prod_frontend --filter "desired-state=running" | grep -q "Running"; then
-              echo "✅ Service is running"
+            # Check if containers are running
+            if docker-compose -f docker-compose.yml --profile production ps | grep -q "Up"; then
+              echo "✅ Containers are running"
+              docker-compose -f docker-compose.yml --profile production ps
             else
-              echo "❌ Service failed to start!"
-              echo "Checking service logs..."
-              docker service logs --tail 50 homestead-architect-prod_frontend
+              echo "❌ Containers failed to start!"
+              echo "Checking container logs..."
+              docker-compose -f docker-compose.yml --profile production logs --tail 50
               exit 1
             fi
 
             # Optional: Check health endpoint if your app has one
             # Uncomment and adjust URL as needed
-            # if curl -f -s http://localhost:8080/api/health > /dev/null; then
+            # if curl -f -s http://localhost:8080 > /dev/null; then
             #   echo "✅ Health check passed"
             # else
-            #   echo "⚠️  Health check endpoint not available"
+            #   echo "⚠️  Application not responding on port 8080"
             # fi
 
-            echo "🧹 Cleaning up old Docker images (keeping last 3)..."
-            docker image prune -f --filter "label=app=homestead-architect" || true
+            echo "🧹 Cleaning up old Docker images..."
+            docker image prune -f || true
 
             echo "✅ Deployment completed successfully!"
             echo "---"
-            echo "Service status:"
-            docker service ps homestead-architect-prod_frontend --filter "desired-state=running" --format "table {{.Name}}\t{{.CurrentState}}\t{{.Image}}"
+            echo "Container status:"
+            docker-compose -f docker-compose.yml --profile production ps
 
       - name: Deployment successful
         if: success()
         run: |
           echo "✅ Production deployment completed successfully!"
           echo ""
-          echo "🌐 Your application is now live"
-          echo "📊 Check service status: docker service ps homestead-architect-prod_frontend"
-          echo "📝 View logs: docker service logs -f homestead-architect-prod_frontend"
+          echo "🌐 Your application is now live at: https://homesteadarchitect.com"
+          echo "📊 Check container status: docker-compose -f docker-compose.yml --profile production ps"
+          echo "📝 View logs: docker-compose -f docker-compose.yml --profile production logs -f"
 
       - name: Deployment failed
         if: failure()
@@ -117,7 +124,7 @@ jobs:
           echo ""
           echo "🔍 Troubleshooting steps:"
           echo "1. SSH to server: ssh ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}"
-          echo "2. Check service logs: docker service logs homestead-architect-prod_frontend"
-          echo "3. Check service status: docker service ps homestead-architect-prod_frontend"
-          echo "4. Rollback if needed: docker service rollback homestead-architect-prod_frontend"
+          echo "2. Check container logs: docker-compose -f docker-compose.yml --profile production logs"
+          echo "3. Check container status: docker-compose -f docker-compose.yml --profile production ps"
+          echo "4. Rollback: cd /root/homestead-architect && git checkout HEAD~1 && docker-compose --profile production up -d --build"
           exit 1
