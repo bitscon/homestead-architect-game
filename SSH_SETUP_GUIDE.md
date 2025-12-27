@@ -31,11 +31,17 @@ Your public key has been saved in /home/billybs/.ssh/github_deploy_homestead.pub
 ## Step 2: Copy Public Key to Production Server
 
 ```bash
-# Copy the public key to bitscon.net
-ssh-copy-id -i ~/.ssh/github_deploy_homestead.pub user@bitscon.net
-
-# Replace 'user' with your actual SSH username on bitscon.net
+# Copy the public key to production VPS
+# Use either the VPS hostname or DNS alias (bitscon.net)
+ssh-copy-id -i ~/.ssh/github_deploy_homestead.pub billybs@vps-5385eb51.vps.ovh.us
+# OR
+ssh-copy-id -i ~/.ssh/github_deploy_homestead.pub billybs@bitscon.net
 ```
+
+**Production Server Details:**
+- VPS Hostname: `vps-5385eb51.vps.ovh.us`
+- DNS Alias: `bitscon.net` (both point to 15.204.225.161)
+- SSH User: `billybs`
 
 **What this does:**
 - Adds your public key to `~/.ssh/authorized_keys` on the production server
@@ -118,13 +124,14 @@ AAAEC3NzaC1lZDI1NTE5AAAAIJQExampleKeyDataHere==
 ### Secret 2: PROD_HOST
 
 - **Name:** `PROD_HOST`
-- **Value:** `bitscon.net` (or your server's IP address)
+- **Value:** `vps-5385eb51.vps.ovh.us` or `bitscon.net` (both work - DNS alias)
+- **Recommended:** Use `bitscon.net` for simplicity
 - Click **Add secret**
 
 ### Secret 3: PROD_USER
 
 - **Name:** `PROD_USER`
-- **Value:** Your SSH username on bitscon.net (e.g., `deploy` or `billybs`)
+- **Value:** `billybs`
 - Click **Add secret**
 
 ### Secret 4: PROD_APP_PATH
@@ -329,8 +336,17 @@ Add:
 ```
 # Production server for Homestead Architect
 Host homestead-prod
+    HostName vps-5385eb51.vps.ovh.us
+    User billybs
+    IdentityFile ~/.ssh/github_deploy_homestead
+    Port 22
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+
+# Alternative using DNS alias
+Host homestead-prod-dns
     HostName bitscon.net
-    User your-username
+    User billybs
     IdentityFile ~/.ssh/github_deploy_homestead
     Port 22
     ServerAliveInterval 60

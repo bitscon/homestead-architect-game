@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2025-12-26
 
+### Production Infrastructure
+
+**Server Details:**
+- **VPS Provider**: OVH Cloud
+- **Hostname**: `vps-5385eb51.vps.ovh.us`
+- **DNS Alias**: `bitscon.net` → 15.204.225.161
+- **Application URL**: `https://myhome.homesteadarchitect.com`
+- **Supabase URL**: `https://supabase.bitscon.net`
+- **Docker Port**: 8082 (proxied via Plesk)
+- **User**: `billybs`
+- **App Path**: `/opt/apps/homestead-architect`
+
 ### Changed - Deployment Infrastructure Overhaul
 
 #### Migration from Docker Swarm to Docker Compose
@@ -115,7 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 If you have an existing Docker Swarm deployment, follow these steps:
 
-### On Production Server (bitscon.net)
+### On Production Server (vps-5385eb51.vps.ovh.us / bitscon.net)
 
 ```bash
 # 1. Stop and remove old Swarm stack

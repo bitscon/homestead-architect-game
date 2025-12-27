@@ -5,6 +5,15 @@ Modern farm management dashboard built with Vite, React 18, shadcn/ui, and Supab
 **Live Application:** https://myhome.homesteadarchitect.com  
 **Static Homepage:** https://homesteadarchitect.com
 
+## Infrastructure
+
+**Production Server:**
+- VPS: `vps-5385eb51.vps.ovh.us` (OVH VPS)
+- DNS Alias: `bitscon.net` → 15.204.225.161
+- User: `billybs`
+- App Path: `/opt/apps/homestead-architect`
+- Docker Port: 8082 → Proxied via Plesk to `https://myhome.homesteadarchitect.com`
+
 ## Prerequisites
 - Node.js 20+
 - npm 10+

@@ -44,7 +44,8 @@
 └─────────────────────────────────────────────────────────┘
           ↓ build & push image    ↓ SSH deploy & pull image
 ┌─────────────────────────────────────────────────────────┐
-│  PRODUCTION (bitscon.net)                               │
+│  PRODUCTION (vps-5385eb51.vps.ovh.us / bitscon.net)     │
+│  ├─ OVH VPS at 15.204.225.161                           │
 │  ├─ /opt/apps/homestead-architect/                      │
 │  ├─ Docker Compose (production profile)                 │
 │  ├─ Port 8082 → Plesk proxy → myhome.homesteadarchitect.com│
@@ -75,15 +76,24 @@
 - Git configured
 - Node.js 20+ and npm
 
-**On bitscon.net:**
-- Docker installed and running (version 20.10.24+)
-- Docker Compose installed (version 1.29.2+)
-- Plesk installed for proxy management
-- SSH access configured
-- Domains: 
-  - homesteadarchitect.com (static homepage)
-  - myhome.homesteadarchitect.com (application portal)
-- Existing services running on ports: 8081 (Supabase), 5432, 6543, 4000, 5678
+**Production VPS (vps-5385eb51.vps.ovh.us):**
+- **Hostname**: `vps-5385eb51.vps.ovh.us` (OVH VPS)
+- **DNS Alias**: `bitscon.net` → 15.204.225.161
+- **User**: `billybs`
+- **Docker**: 20.10.24+ with Compose 1.29.2+
+- **Plesk**: Installed for proxy management
+- **SSH Access**: Port 22, key-based authentication
+- **Domains**: 
+  - `homesteadarchitect.com` (static homepage)
+  - `myhome.homesteadarchitect.com` (application portal - port 8082)
+  - `supabase.bitscon.net` (Supabase instance)
+- **Existing Services**: 
+  - Port 8081: Supabase Kong
+  - Port 5432: PostgreSQL/Supavisor
+  - Port 6543: Supabase Pooler
+  - Port 4000: Analytics
+  - Port 5678: n8n
+  - Port 11434: Ollama
 
 ### One-Time Setup Tasks
 
@@ -114,11 +124,13 @@ VITE_SHOW_GAME_DEBUG=true
 DEV_WEB_PORT=8081
 ```
 
-#### 2. Production Server (bitscon.net)
+#### 2. Production Server
 
 ```bash
-# SSH to production
-ssh user@bitscon.net
+# SSH to production (use either hostname or DNS alias)
+ssh billybs@vps-5385eb51.vps.ovh.us
+# OR
+ssh billybs@bitscon.net
 
 # Create apps directory
 sudo mkdir -p /opt/apps
@@ -178,8 +190,8 @@ Create these secrets:
 
 | Secret Name | Value | Example |
 |-------------|-------|---------|
-| `PROD_HOST` | Production server hostname or IP | `bitscon.net` or `123.45.67.89` |
-| `PROD_USER` | SSH username on production | `deploy` or your username |
+| `PROD_HOST` | Production server hostname | `vps-5385eb51.vps.ovh.us` or `bitscon.net` |
+| `PROD_USER` | SSH username on production | `billybs` |
 | `SSH_PRIVATE_KEY` | Content of `~/.ssh/github_deploy` | (entire private key file) |
 | `PROD_APP_PATH` | Path to app on production | `/opt/apps/homestead-architect` |
 

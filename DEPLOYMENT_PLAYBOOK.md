@@ -21,11 +21,13 @@ This document provides quick reference instructions for deploying Homestead Arch
 - Git access to repository
 - GitHub account (for GHCR access)
 
-### Production Server (bitscon.net)
-- User: billybs
-- App path: /opt/apps/homestead-architect
-- Port: 8082 (proxied via Plesk to myhome.homesteadarchitect.com)
-- Existing services: Supabase stack (ports 8081, 5432, etc.)
+### Production Server
+- **VPS Hostname**: `vps-5385eb51.vps.ovh.us` (OVH VPS)
+- **DNS Alias**: `bitscon.net` → 15.204.225.161
+- **User**: `billybs`
+- **App Path**: `/opt/apps/homestead-architect`
+- **App Port**: 8082 (proxied via Plesk to `https://myhome.homesteadarchitect.com`)
+- **Existing Services**: Supabase stack (ports 8081, 5432, 6543, 4000), n8n (5678), Ollama (11434)
 
 ## Environment Configuration
 
@@ -119,7 +121,7 @@ This is the primary deployment method that automates the entire process.
 **What happens:**
 - Builds Docker image from Dockerfile
 - Pushes to GitHub Container Registry (ghcr.io)
-- SSHs to bitscon.net
+- SSHs to production VPS (vps-5385eb51.vps.ovh.us / bitscon.net)
 - Pulls latest image
 - Deploys with Docker Compose on port 8082
 - Runs health checks
@@ -132,7 +134,9 @@ This is the primary deployment method that automates the entire process.
 For emergencies or when GitHub Actions is unavailable:
 
 ```bash
-# SSH to production server
+# SSH to production server (use either VPS hostname or DNS alias)
+ssh billybs@vps-5385eb51.vps.ovh.us
+# OR
 ssh billybs@bitscon.net
 cd /opt/apps/homestead-architect
 
