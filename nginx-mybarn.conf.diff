@@ -1,0 +1,51 @@
+NGINX CONFIGURATION DIFF - mybarn.barn.workshop.home
+====================================================
+
+OLD CONFIGURATION ISSUES:
+-------------------------
+❌ SSL Certificate: /etc/ssl/certs/barn.workshop.home.crt
+❌ SSL Key: /etc/ssl/private/barn.workshop.home.key
+❌ SSL Ciphers: HIGH:!aNULL:!MD5 (basic)
+❌ SSL Session Cache: shared:SSL:10m (too small)
+❌ SSL Session Timeout: 10m (too short)
+❌ Missing: ssl_session_tickets off
+❌ Missing: HSTS header
+❌ Missing: client_max_body_size
+❌ Missing: X-Forwarded-Port header
+
+NEW CONFIGURATION (CORRECTED):
+-------------------------------
+✅ SSL Certificate: /home/billybs/workshop-ca/certs/workshop-wildcard.crt
+✅ SSL Key: /home/billybs/workshop-ca/private/workshop-wildcard.key
+✅ SSL Ciphers: ECDHE-ECDSA-AES128-GCM-SHA256:... (full suite)
+✅ SSL Session Cache: shared:SSL:50m
+✅ SSL Session Timeout: 1d
+✅ SSL Session Tickets: off
+✅ HSTS: max-age=31536000; includeSubDomains; preload
+✅ Upload Limit: client_max_body_size 50M
+✅ Proxy Header: X-Forwarded-Port $server_port
+
+UNCHANGED (ALREADY CORRECT):
+----------------------------
+✅ server_name: mybarn.barn.workshop.home
+✅ HTTP → HTTPS redirect
+✅ SSL Protocols: TLSv1.2 TLSv1.3
+✅ Proxy target: http://ai.workshop.home:8081
+✅ WebSocket support: Upgrade headers
+✅ Security headers: X-Frame-Options, X-Content-Type-Options, etc.
+✅ Timeouts: 60s connect/send/read
+✅ Logging: /var/log/nginx/mybarn.*
+
+CONFIGURATION SOURCE:
+---------------------
+Based on: vault.barn.workshop.home configuration
+Purpose: Exact replication of security and performance settings
+Backend: Different (vault → Vaultwarden, mybarn → Homestead Architect)
+
+SAFETY CONFIRMATION:
+--------------------
+✅ vault.barn.workshop.home NOT modified
+✅ Both use same wildcard certificate
+✅ No port conflicts
+✅ No duplicate server names
+✅ Configuration syntax valid

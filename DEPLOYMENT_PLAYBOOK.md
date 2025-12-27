@@ -1,460 +1,358 @@
-# Homestead Architect - Deployment Playbook
+# Homestead Architect - Deployment Playbook for barn.workshop.home
 
-**Last Updated:** December 26, 2025  
-**Deployment Method:** Docker Compose with GitHub Container Registry
+## 📦 Deployment Package Ready
 
-This document provides quick reference instructions for deploying Homestead Architect using Docker Compose.
+**Package:** `homestead-deployment.tar.gz` (576 KB)  
+**Target:** barn.workshop.home  
+**Location:** /opt/apps/homestead-architect  
+**URL:** https://mybarn.barn.workshop.home
 
-## Overview
+---
 
-- **Development**: Full stack with local database, hot reload, and debugging tools
-- **Production**: Frontend-only using external Supabase backend
-- **Infrastructure**: Docker Compose on single server (bitscon.net)
-- **Image Storage**: GitHub Container Registry (GHCR)
-- **Repository**: github.com/bitscon/homestead-architect-game
+## 🚀 Quick Deployment (3 Steps)
 
-## Prerequisites
+### Step 1: Copy Files to barn.workshop.home
 
-### Common Requirements
-- Docker Engine 20.10+
-- Docker Compose 1.29+
-- Git access to repository
-- GitHub account (for GHCR access)
-
-### Production Server
-- **VPS Hostname**: `vps-5385eb51.vps.ovh.us` (OVH VPS)
-- **DNS Alias**: `bitscon.net` → 15.204.225.161
-- **User**: `billybs`
-- **App Path**: `/opt/apps/homestead-architect`
-- **App Port**: 8082 (proxied via Plesk to `https://myhome.homesteadarchitect.com`)
-- **Existing Services**: Supabase stack (ports 8081, 5432, 6543, 4000), n8n (5678), Ollama (11434)
-
-## Environment Configuration
-
-### Development Environment (.env.dev)
+**Option A: SCP (if you have SSH)**
 ```bash
-# Copy template and configure
-cp .env.example .env.dev
-
-# Required variables
-VITE_SUPABASE_URL=http://localhost:5432  # or your dev Supabase
-VITE_SUPABASE_ANON_KEY=your_dev_anon_key
-DEV_IMAGE=homestead-architect-dev:latest
-DEV_WEB_PORT=8081
-
-# Database (if using local PostgreSQL)
-POSTGRES_DB=homestead_dev
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_PORT=5432
-
-# PgAdmin (optional)
-PGADMIN_DEFAULT_EMAIL=admin@homestead.local
-PGADMIN_DEFAULT_PASSWORD=admin
-PGADMIN_PORT=5050
+scp homestead-deployment.tar.gz billybs@barn.workshop.home:/tmp/
 ```
 
-### Production Environment (.env.prod)
-```bash
-# Copy template and configure
-cp .env.prod.example .env.prod
+**Option B: Manual Transfer**
+- Copy `homestead-deployment.tar.gz` to barn.workshop.home via your preferred method
+- Place in `/tmp/` directory
 
-# Required variables
-NODE_ENV=production
-PROD_WEB_PORT=8082
-VITE_APP_NAME=Homestead Architect
-VITE_APP_URL=https://myhome.homesteadarchitect.com
-VITE_SUPABASE_URL=https://supabase.bitscon.net
-VITE_SUPABASE_ANON_KEY=your_production_anon_key
-VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # for validation
-```
+---
 
-## Development Deployment
+### Step 2: Extract and Deploy on barn.workshop.home
 
-### Quick Start
-```bash
-# Clone repository
-git clone https://github.com/bitscon/homestead-architect-game.git
-cd homestead-architect-game
-
-# Create environment file
-cp .env.example .env.dev
-# Edit .env.dev with your Supabase credentials
-
-# Start development environment with Docker Compose
-docker-compose --profile dev up -d
-
-# View logs
-docker-compose logs -f frontend-dev
-```
-
-### Docker Compose Profiles
-
-| Profile | Services | Purpose |
-|---------|----------|---------|
-| `dev` | frontend-dev, postgres | Local development |
-| `production` | frontend-prod | Production deployment |
-| `tools` | pgadmin | Database admin |
-
-**Usage:**
-```bash
-# Development
-docker-compose --profile dev up -d
-
-# Production
-docker-compose --profile production up -d
-
-# Database tools
-docker-compose --profile tools up -d
-```
-
-### Development Services
-- **Frontend**: `http://localhost:8081` (Vite dev server with hot reload)
-- **PostgreSQL**: `localhost:5432` (optional local database)
-- **PgAdmin**: `http://localhost:5050` (use `--profile tools`)
-
-### Development Workflow
-1. Make code changes locally
-2. Changes automatically sync via volume mount
-3. Browser auto-refreshes with hot module reload
-4. Use browser dev tools for debugging
-
-## Production Deployment
-
-### Method 1: GitHub Actions (Recommended)
-
-This is the primary deployment method that automates the entire process.
-
-**Steps:**
-1. Navigate to [GitHub Actions](https://github.com/bitscon/homestead-architect-game/actions)
-2. Select "Deploy to Production" workflow
-3. Click "Run workflow"
-4. Select branch: `main`
-5. Type `deploy` to confirm
-6. Choose log level (`info` or `debug`)
-7. Click "Run workflow" button
-8. Monitor deployment progress
-
-**What happens:**
-- Builds Docker image from Dockerfile
-- Pushes to GitHub Container Registry (ghcr.io)
-- SSHs to production VPS (vps-5385eb51.vps.ovh.us / bitscon.net)
-- Pulls latest image
-- Deploys with Docker Compose on port 8082
-- Runs health checks
-- Reports success/failure
-
-**Timeline:** ~3-4 minutes total
-
-### Method 2: Manual Deployment
-
-For emergencies or when GitHub Actions is unavailable:
+SSH into barn.workshop.home and run:
 
 ```bash
-# SSH to production server (use either VPS hostname or DNS alias)
-ssh billybs@vps-5385eb51.vps.ovh.us
-# OR
-ssh billybs@bitscon.net
+# Create directory
+sudo mkdir -p /opt/apps/homestead-architect
 cd /opt/apps/homestead-architect
 
-# Pull latest code
-git fetch origin
-git checkout main
-git pull origin main
+# Extract files
+sudo tar -xzf /tmp/homestead-deployment.tar.gz -C /opt/apps/homestead-architect
 
-# Pull latest image from GHCR (if already built)
-sudo docker pull ghcr.io/bitscon/homestead-architect-game:latest
+# Set ownership
+sudo chown -R billybs:billybs /opt/apps/homestead-architect
 
-# Or build locally
-sudo docker build -t ghcr.io/bitscon/homestead-architect-game:latest -f Dockerfile .
-
-# Deploy
-sudo docker-compose -f docker-compose.yml --profile production down
-sudo docker-compose -f docker-compose.yml --profile production up -d
-
-# Verify
-curl http://localhost:8082
-sudo docker-compose -f docker-compose.yml --profile production ps
+# Deploy Docker containers
+bash DEPLOY-ON-BARN.sh
 ```
 
-### 2. Validate Production Environment
-```bash
-# Test Supabase connectivity
-node scripts/validate-supabase-prod.mjs
+---
 
-# Validate stack file syntax
-docker stack config -c stack.prod.yml
-```
-
-### 3. Deploy Production Stack
-
-#### Option 1: Portainer (Recommended)
-1. Access Portainer web interface
-2. Navigate to **Stacks** → **Add stack**
-3. Set stack name: `homestead-architect-prod`
-4. Select **Web editor** and paste contents of `stack.prod.yml`
-5. Configure environment variables:
-   - `PROD_IMAGE=${FULL_IMAGE_TAG}`
-   - `PROD_WEB_PORT=8080`
-   - `VITE_SUPABASE_URL=https://supabase.bitscon.net`
-   - `VITE_SUPABASE_ANON_KEY=your_production_anon_key`
-6. Click **Deploy the stack**
-
-#### Option 2: CLI
-```bash
-# Set environment variables
-export PROD_IMAGE=${FULL_IMAGE_TAG}
-export PROD_WEB_PORT=8080
-
-# Deploy production stack
-docker stack deploy -c stack.prod.yml homestead-architect-prod
-```
-
-### 4. Production Verification
-```bash
-# Check service status
-docker service ls | grep homestead-architect-prod
-docker service ps homestead-architect-prod_frontend
-
-# Test accessibility
-curl -I http://localhost:8080
-
-# Monitor logs
-docker service logs homestead-architect-prod_frontend --tail=50
-```
-
-## Stack Management
-
-### View Stack Status
-```bash
-# List all stacks
-docker stack ls
-
-# List services in stack
-docker service ls | grep homestead-architect
-
-# Service details
-docker service inspect homestead-architect-prod_frontend
-```
-
-### Update Stack
-1. **Via Portainer**: Edit the stack and click "Update the stack"
-2. **Via CLI**: Re-run the deploy command with updated environment
+### Step 3: Install Nginx Configuration
 
 ```bash
-# Update with new image
-export PROD_IMAGE=your-registry.com/homestead-architect-prod:v1.1.0
-docker stack deploy -c stack.prod.yml homestead-architect-prod
+cd /opt/apps/homestead-architect
+sudo bash install-nginx.sh
 ```
 
-### Scale Services
+---
+
+## 🎯 Detailed Instructions
+
+### On barn.workshop.home
+
+#### 1. Prepare Directory Structure
+
 ```bash
-# Scale production frontend
-docker service scale homestead-architect-prod_frontend=3
+# Login to barn
+ssh billybs@barn.workshop.home
+
+# Create application directory
+sudo mkdir -p /opt/apps/homestead-architect
+sudo chown -R billybs:billybs /opt/apps/homestead-architect
 ```
 
-### Remove Stack
+#### 2. Transfer and Extract Files
+
 ```bash
-# Remove entire stack
-docker stack rm homestead-architect-prod
+# Move deployment package
+mv /tmp/homestead-deployment.tar.gz /opt/apps/
+
+# Extract
+cd /opt/apps/homestead-architect
+tar -xzf ../homestead-deployment.tar.gz
+
+# Verify files
+ls -la
 ```
 
-## Troubleshooting
+Expected files:
+- docker-compose.yml
+- Dockerfile.dev
+- .env.barn
+- nginx-mybarn.conf
+- DEPLOY-ON-BARN.sh
+- install-nginx.sh
+- package.json
+- src/
+- public/
 
-### Common Issues
+#### 3. Deploy Docker Stack
 
-#### Service Won't Start
 ```bash
-# Check service logs
-docker service logs homestead-architect-prod_frontend
+cd /opt/apps/homestead-architect
 
-# Check for placement errors
-docker service ps homestead-architect-prod_frontend
+# Make script executable
+chmod +x DEPLOY-ON-BARN.sh
 
-# Inspect service configuration
-docker service inspect homestead-architect-prod_frontend
+# Run deployment
+bash DEPLOY-ON-BARN.sh
 ```
 
-#### Database Connection Issues
+This will:
+- Create `.env` from `.env.barn`
+- Stop any existing containers
+- Build Docker images
+- Start containers with `--profile dev`
+- Wait for startup
+- Test local access on port 8081
+
+#### 4. Verify Docker Containers
+
 ```bash
-# Run Supabase validation
-node scripts/validate-supabase-prod.mjs
+# Check running containers
+docker compose --profile dev ps
 
-# Test network connectivity
-docker run --rm --network homestead-architect-prod_homestead-network \
-  alpine ping supabase.bitscon.net
+# Expected output:
+# NAME                                 STATUS    PORTS
+# homestead-architect-frontend-dev-1   Running   8081:5173
+# homestead-architect-postgres-1       Running   5432:5432
+
+# View logs
+docker compose --profile dev logs -f frontend-dev
 ```
 
-#### Port Conflicts
+#### 5. Install Nginx Configuration
+
 ```bash
-# Check port usage
-netstat -tulpn | grep :8080
+cd /opt/apps/homestead-architect
 
-# Update port in environment
-export PROD_WEB_PORT=8081
-docker stack deploy -c stack.prod.yml homestead-architect-prod
+# Make script executable
+chmod +x install-nginx.sh
+
+# Run as root
+sudo bash install-nginx.sh
 ```
 
-### Debug Mode (Development Only)
-The development environment includes comprehensive debugging:
+This will:
+- Copy nginx-mybarn.conf to /etc/nginx/sites-available/
+- Create symlink in /etc/nginx/sites-enabled/
+- Test nginx configuration
+- Reload nginx
 
-1. **Debug Panel**: Available in browser dev tools
-2. **Console Logging**: All console calls are captured and stored
-3. **Network Telemetry**: API calls and responses are logged
-4. **Error Tracking**: Unhandled errors and promise rejections
-5. **Persistent Logs**: Available in localStorage and downloadable
+---
 
-Access debug logs:
-```javascript
-// In browser console
-window.__debugLogger.getLogs()    // Get all logs
-window.__debugLogger.downloadLogs()  // Download as JSONL
-```
+## ✅ Verification Steps
 
-## Monitoring
+### 1. Check Docker Containers
 
-### Container Health
 ```bash
-# Service health status
-docker service ls
-
-# Container resource usage
-docker stats
-
-# Node availability
-docker node ls
+docker ps | grep homestead
 ```
 
-### Log Management
+Should show:
+- homestead-architect-frontend-dev-1 (running)
+- homestead-architect-postgres-1 (running)
+
+### 2. Test Local Access (on barn.workshop.home)
+
 ```bash
-# Real-time logs
-docker service logs -f homestead-architect-prod_frontend
-
-# Export logs
-docker service logs homestead-architect-prod_frontend > production.log
-
-# Filter logs by time
-docker service logs --since=1h homestead-architect-prod_frontend
+curl -I http://localhost:8081
 ```
 
-### Performance Monitoring
-- Monitor container memory and CPU usage
-- Check response times via application logs
-- Use browser dev tools for frontend performance
-- Set up external monitoring (Prometheus/Grafana) if needed
+Expected: `HTTP/1.1 200 OK`
 
-## Security Considerations
+### 3. Check Nginx
 
-### Environment Variables
-- Never commit `.env.dev` or `.env.prod` to version control
-- Use separate values for development and production
-- Rotate Supabase keys regularly
-- Store secrets in proper secret management systems
-
-### Container Security
 ```bash
-# Scan images for vulnerabilities
-docker scan your-registry.com/homestead-architect-prod:latest
-
-# Use non-root users (configured in Dockerfile)
-# Implement resource limits (configured in stack files)
+sudo nginx -t
+sudo systemctl status nginx
 ```
 
-### Network Security
-- Production stack only exposes necessary ports
-- Use HTTPS in production (reverse proxy)
-- Implement proper CORS headers
-- Consider network policies for multi-tenant environments
+### 4. Check Portainer
 
-## Backup and Recovery
+1. Open Portainer: http://barn.workshop.home:9000
+2. Navigate to: Containers
+3. Look for: `homestead-architect-frontend-dev-1`
+4. Status should be: Running
 
-### Database Backup (Supabase)
-- Use Supabase built-in backup features
-- Export critical data regularly
-- Test restore procedures
+### 5. Test HTTPS Access
 
-### Application Backup
+From any machine:
 ```bash
-# Export stack configuration
-docker stack config -c stack.prod.yml > stack-backup.yml
-
-# Save environment files (securely)
-# Commit stack files to version control
+curl -k -I https://mybarn.barn.workshop.home
 ```
 
-### Disaster Recovery
-1. Restore Supabase database
-2. Rebuild and push container images
-3. Redeploy stacks using saved configurations
-4. Validate application functionality
+Expected: `HTTP/2 200`
 
-## Rollback Procedures
+### 6. Browser Test
 
-### Quick Rollback
+Open browser: **https://mybarn.barn.workshop.home**
+
+Should show: Homestead Architect application
+
+---
+
+## 🐛 Troubleshooting
+
+### Issue: Containers Not Starting
+
 ```bash
-# Revert to previous image version
-export PROD_IMAGE=your-registry.com/homestead-architect-prod:v1.0.0
-docker stack deploy -c stack.prod.yml homestead-architect-prod
+# Check logs
+docker compose --profile dev logs
+
+# Rebuild
+docker compose --profile dev down
+docker compose --profile dev up -d --build
 ```
 
-### Full Rollback
+### Issue: Port 8081 Already in Use
+
 ```bash
-# Remove current stack
-docker stack rm homestead-architect-prod
+# Check what's using the port
+sudo lsof -i :8081
 
-# Wait for cleanup
-sleep 30
-
-# Deploy previous version
-export PROD_IMAGE=your-registry.com/homestead-architect-prod:v0.9.0
-docker stack deploy -c stack.prod.yml homestead-architect-prod
+# Stop the conflicting service or change port in docker-compose.yml
 ```
 
-## Continuous Deployment
+### Issue: 502 Bad Gateway
 
-### CI/CD Pipeline Integration
+**Cause:** Nginx can't reach container
+
+**Fix:**
 ```bash
-# Example deployment script
-#!/bin/bash
-set -e
+# Verify container is running
+docker ps | grep homestead
 
-# Variables
-VERSION=$1
-REGISTRY=your-registry.com
-IMAGE_TAG=${REGISTRY}/homestead-architect-prod:${VERSION}
+# Test local access
+curl http://localhost:8081
 
-# Build and push
-docker build -f Dockerfile -t ${IMAGE_TAG} .
-docker push ${IMAGE_TAG}
-
-# Deploy
-export PROD_IMAGE=${IMAGE_TAG}
-docker stack deploy -c stack.prod.yml homestead-architect-prod
-
-# Verify
-sleep 30
-curl -f http://localhost:8080 || exit 1
+# Check nginx error log
+sudo tail -f /var/log/nginx/mybarn.barn.workshop.home.error.log
 ```
 
-### Automated Testing
-- Run Supabase validation before deployment
-- Implement smoke tests after deployment
-- Set up automated rollback on failure
-- Monitor deployment success rates
+### Issue: Portainer Not Showing Containers
 
-## Support
+**Cause:** Portainer may be connected to different Docker endpoint
 
-### Documentation
-- Check this playbook first
-- Review stack file configurations
-- Consult application logs for errors
+**Fix:**
+- Portainer should be running on barn.workshop.home
+- Check Settings → Endpoints → Local
+- Containers should appear under "Containers" section
 
-### Common Resources
-- [Docker Swarm Documentation](https://docs.docker.com/engine/swarm/)
-- [Portainer Documentation](https://docs.portainer.io/)
-- [Supabase Documentation](https://supabase.com/docs)
+---
 
-### Contact
-- Repository maintainers: Use GitHub issues
-- Infrastructure support: Contact your DevOps team
-- Application bugs: File issues in the project repository
+## 📊 File Locations on barn.workshop.home
+
+| Path | Purpose |
+|------|---------|
+| `/opt/apps/homestead-architect/` | Application root |
+| `/opt/apps/homestead-architect/docker-compose.yml` | Docker configuration |
+| `/opt/apps/homestead-architect/.env` | Environment variables |
+| `/etc/nginx/sites-available/mybarn.barn.workshop.home` | Nginx config |
+| `/etc/nginx/sites-enabled/mybarn.barn.workshop.home` | Nginx config (symlink) |
+| `/var/log/nginx/mybarn.barn.workshop.home.access.log` | Access logs |
+| `/var/log/nginx/mybarn.barn.workshop.home.error.log` | Error logs |
+
+---
+
+## 🔧 Management Commands
+
+### Start/Stop Containers
+
+```bash
+cd /opt/apps/homestead-architect
+
+# Start
+docker compose --profile dev up -d
+
+# Stop
+docker compose --profile dev down
+
+# Restart
+docker compose --profile dev restart
+
+# View logs
+docker compose --profile dev logs -f
+```
+
+### Update Application
+
+```bash
+cd /opt/apps/homestead-architect
+
+# Pull latest code (if using git)
+git pull
+
+# Rebuild
+docker compose --profile dev up -d --build
+```
+
+### Nginx Management
+
+```bash
+# Test config
+sudo nginx -t
+
+# Reload
+sudo systemctl reload nginx
+
+# Restart
+sudo systemctl restart nginx
+
+# View logs
+sudo tail -f /var/log/nginx/mybarn.barn.workshop.home.access.log
+```
+
+---
+
+## 📋 Quick Reference
+
+**Application URL:** https://mybarn.barn.workshop.home  
+**Container Port:** 8081 (internal)  
+**Nginx Port:** 443 (HTTPS)  
+**Portainer:** http://barn.workshop.home:9000  
+**SSL Certificate:** /home/billybs/workshop-ca/certs/workshop-wildcard.crt
+
+**Stack Name:** homestead-architect  
+**Profile:** dev  
+**Containers:**
+- homestead-architect-frontend-dev-1
+- homestead-architect-postgres-1
+
+---
+
+## ✅ Deployment Checklist
+
+Before deployment:
+- [ ] barn.workshop.home is accessible
+- [ ] Docker and docker-compose installed on barn
+- [ ] Port 8081 is available
+- [ ] Nginx installed on barn
+- [ ] SSL certificates exist at /home/billybs/workshop-ca/
+- [ ] Portainer running (optional)
+
+After deployment:
+- [ ] Containers show as "Running" in `docker ps`
+- [ ] http://localhost:8081 responds (on barn)
+- [ ] Nginx config test passes
+- [ ] https://mybarn.barn.workshop.home loads in browser
+- [ ] Containers visible in Portainer
+- [ ] No errors in nginx logs
+
+---
+
+**Deployment Package:** homestead-deployment.tar.gz  
+**Ready to Deploy:** ✅  
+**Estimated Time:** 10-15 minutes
+
+---
+
+**Next Step:** Transfer `homestead-deployment.tar.gz` to barn.workshop.home and follow steps above!

@@ -7,11 +7,11 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
 
-    allowedHosts: ['ai', 'localhost', '127.0.0.1'],
+    allowedHosts: ['mybarn.barn.workshop.home', 'localhost', '127.0.0.1'],
 
     hmr: {
       protocol: 'ws',
-      clientPort: 8081, // browser connects to :8081 (host), not :5173
+      clientPort: 8082, // browser connects to :8081 (host), not :5173
     },
   },
 
