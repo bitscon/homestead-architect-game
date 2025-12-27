@@ -16,9 +16,53 @@ on:
           - info
           - debug
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm_deploy == 'deploy' }}
+    permissions:
+      contents: read
+      packages: write
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=prod-,format=short
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
   deploy:
     runs-on: ubuntu-latest
+    needs: build-and-push
     if: ${{ github.event.inputs.confirm_deploy == 'deploy' }}
     
     steps:
@@ -30,6 +74,7 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "Triggered by: ${{ github.actor }}"
           echo "Log level: ${{ github.event.inputs.log_level }}"
+          echo "Image: ${{ needs.build-and-push.outputs.image-tag }}"
           echo "---"
 
       - name: Deploy to production server
@@ -59,7 +104,13 @@ jobs:
             echo "📋 Current commit: $(git rev-parse --short HEAD)"
             echo "📋 Commit message: $(git log -1 --pretty=%B)"
 
-            echo "🔨 Building and deploying with Docker Compose..."
+            echo "🔐 Logging in to GitHub Container Registry..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "📥 Pulling latest Docker image from GHCR..."
+            sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+            echo "🔨 Deploying with Docker Compose..."
             # Load production environment variables
             if [ -f .env.prod ]; then
               export $(cat .env.prod | grep -v '^#' | xargs)
@@ -67,55 +118,58 @@ jobs:
             
             # Stop current containers
             echo "🛑 Stopping current containers..."
-            docker-compose -f docker-compose.yml --profile production down || true
+            sudo docker-compose -f docker-compose.yml --profile production down || true
 
-            # Build new images
-            echo "🔨 Building Docker images..."
-            docker-compose -f docker-compose.yml --profile production build --no-cache
-
-            # Start updated containers
+            # Start updated containers with new image
             echo "🚀 Starting updated containers..."
-            docker-compose -f docker-compose.yml --profile production up -d
+            sudo docker-compose -f docker-compose.yml --profile production up -d
 
             echo "⏳ Waiting for containers to stabilize (15 seconds)..."
             sleep 15
 
             echo "🏥 Running health checks..."
             # Check if containers are running
-            if docker-compose -f docker-compose.yml --profile production ps | grep -q "Up"; then
+            if sudo docker-compose -f docker-compose.yml --profile production ps | grep -q "Up"; then
               echo "✅ Containers are running"
-              docker-compose -f docker-compose.yml --profile production ps
+              sudo docker-compose -f docker-compose.yml --profile production ps
             else
               echo "❌ Containers failed to start!"
               echo "Checking container logs..."
-              docker-compose -f docker-compose.yml --profile production logs --tail 50
+              sudo docker-compose -f docker-compose.yml --profile production logs --tail 50
               exit 1
             fi
 
-            # Optional: Check health endpoint if your app has one
-            # Uncomment and adjust URL as needed
-            # if curl -f -s http://localhost:8080 > /dev/null; then
-            #   echo "✅ Health check passed"
-            # else
-            #   echo "⚠️  Application not responding on port 8080"
-            # fi
+            # Check health endpoint
+            echo "🔍 Testing application endpoint..."
+            if curl -f -s http://localhost:8082 > /dev/null; then
+              echo "✅ Health check passed - Application responding on port 8082"
+            else
+              echo "⚠️  Warning: Application not responding on port 8082"
+              echo "Check logs for details"
+            fi
 
             echo "🧹 Cleaning up old Docker images..."
-            docker image prune -f || true
+            sudo docker image prune -f || true
 
             echo "✅ Deployment completed successfully!"
             echo "---"
             echo "Container status:"
-            docker-compose -f docker-compose.yml --profile production ps
+            sudo docker-compose -f docker-compose.yml --profile production ps
 
       - name: Deployment successful
         if: success()
         run: |
           echo "✅ Production deployment completed successfully!"
           echo ""
-          echo "🌐 Your application is now live at: https://homesteadarchitect.com"
-          echo "📊 Check container status: docker-compose -f docker-compose.yml --profile production ps"
-          echo "📝 View logs: docker-compose -f docker-compose.yml --profile production logs -f"
+          echo "🌐 Your application will be available at: https://myhome.homesteadarchitect.com"
+          echo "🔌 Running on port 8082 (configure Plesk proxy to route subdomain)"
+          echo "📊 Check container status: sudo docker-compose -f docker-compose.yml --profile production ps"
+          echo "📝 View logs: sudo docker-compose -f docker-compose.yml --profile production logs -f"
+          echo ""
+          echo "Next steps:"
+          echo "1. Configure Plesk to proxy myhome.homesteadarchitect.com to port 8082"
+          echo "2. Ensure SSL certificate is configured for the subdomain"
+          echo "3. Test the application at https://myhome.homesteadarchitect.com"
 
       - name: Deployment failed
         if: failure()
@@ -124,7 +178,8 @@ jobs:
           echo ""
           echo "🔍 Troubleshooting steps:"
           echo "1. SSH to server: ssh ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}"
-          echo "2. Check container logs: docker-compose -f docker-compose.yml --profile production logs"
-          echo "3. Check container status: docker-compose -f docker-compose.yml --profile production ps"
-          echo "4. Rollback: cd /root/homestead-architect && git checkout HEAD~1 && docker-compose --profile production up -d --build"
+          echo "2. Check container logs: sudo docker-compose -f docker-compose.yml --profile production logs"
+          echo "3. Check container status: sudo docker-compose -f docker-compose.yml --profile production ps"
+          echo "4. Check if port 8082 is available: sudo netstat -tulpn | grep 8082"
+          echo "5. Rollback: cd ${{ secrets.PROD_APP_PATH }} && git checkout HEAD~1 && sudo docker-compose --profile production up -d"
           exit 1

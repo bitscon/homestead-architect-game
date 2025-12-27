@@ -70,15 +70,18 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8081:5173"
+      - "8082:80"
     environment:
+      - NODE_ENV=production
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
       - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
       - VITE_APP_NAME=${VITE_APP_NAME:-Homestead Architect}
+      - VITE_APP_URL=${VITE_APP_URL:-https://myhome.homesteadarchitect.com}
     networks:
       - homestead-network
     profiles:
       - production
+    restart: unless-stopped
 
 volumes:
   app_src:
