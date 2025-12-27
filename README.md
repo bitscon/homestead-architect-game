@@ -2,11 +2,14 @@
 
 Modern farm management dashboard built with Vite, React 18, shadcn/ui, and Supabase.
 
+**Live Application:** https://myhome.homesteadarchitect.com  
+**Static Homepage:** https://homesteadarchitect.com
+
 ## Prerequisites
 - Node.js 20+
 - npm 10+
-- Docker 24+
-- Docker Swarm (for stack deployments)
+- Docker 20.10+
+- Docker Compose 1.29+
 
 ## Local Development
 ```bash
@@ -16,45 +19,71 @@ npm run dev
 ```
 The dev server runs on http://localhost:5173.
 
-## Docker Dev Stack (Swarm)
+## Docker Development
 ```bash
 cp .env.example .env.dev
-# optional: add POSTGRES_* overrides if you want the local Postgres container
+# Edit .env.dev with your Supabase credentials
 
-# initialize swarm once
-# docker swarm init
+# Start development environment
+docker-compose up -d
 
-docker stack deploy -c stack.dev.yml homestead-architect-dev
+# Or with specific services
+docker-compose up -d frontend-dev postgres
 ```
 Services:
-- `frontend` → Vite dev build on port 8081
-- `postgres` → optional local database (port exposed inside cluster)
-- `pgadmin` → port 5050
+- `frontend-dev` → Vite dev build on port 8081
+- `postgres` → optional local database on port 5432
+- `pgadmin` → database admin UI on port 5050 (use --profile tools)
 
-See `testscripts/build-deploy-dev.txt` for verification steps.
+See `DOCKER_DEVELOPMENT.md` for detailed setup instructions.
 
-## Production Build & Deploy
-1. Create `.env.prod` (never commit). See `.env.prod.example` for required vars.
-2. Validate Supabase schema:
-   ```bash
-   node scripts/validate-supabase-prod.mjs
-   ```
-3. Build/push the frontend image:
-   ```bash
-   VERSION=$(date +"%Y%m%d%H%M")
-   docker build -t registry.example.com/homestead-architect:prod-${VERSION} -f Dockerfile .
-   docker push registry.example.com/homestead-architect:prod-${VERSION}
-   ```
-4. Deploy with Portainer or CLI:
-   ```bash
-   docker stack deploy -c stack.prod.yml homestead-architect-prod
-   ```
-5. Run the verification checklist in `testscripts/build-deploy-prod.txt` (curl checks, env vars, Supabase auth, UI smoke test).
+## Production Deployment
+
+### Automated Deployment (Recommended)
+1. Ensure `.env.prod` exists on production server at `/opt/apps/homestead-architect/.env.prod`
+2. Go to [GitHub Actions](https://github.com/bitscon/homestead-architect-game/actions)
+3. Select "Deploy to Production" workflow
+4. Click "Run workflow"
+5. Type `deploy` to confirm
+6. Monitor deployment progress
+
+The workflow will:
+- Build Docker image
+- Push to GitHub Container Registry (GHCR)
+- SSH to production server
+- Pull latest image
+- Deploy with Docker Compose on port 8082
+- Run health checks
+
+### Manual Deployment
+```bash
+# SSH to production
+ssh billybs@bitscon.net
+cd /opt/apps/homestead-architect
+
+# Pull latest code
+git pull origin main
+
+# Deploy with Docker Compose
+sudo docker-compose -f docker-compose.yml --profile production up -d --build
+
+# Verify
+curl http://localhost:8082
+```
+
+### Production Configuration
+- **Port:** 8082 (proxied via Plesk to https://myhome.homesteadarchitect.com)
+- **Image Registry:** GitHub Container Registry (GHCR)
+- **Database:** Supabase at https://supabase.bitscon.net
+- **Deployment Method:** Docker Compose with production profile
 
 ## Documentation
-- `DEPLOYMENT_PLAYBOOK.md` – complete Dev/Prod runbook.
-- `scripts/validate-supabase-prod.mjs` – schema guard.
-- `stack.dev.yml` / `stack.prod.yml` – Swarm stack definitions.
+- `DEPLOYMENT_GUIDE.md` – Complete deployment guide with troubleshooting
+- `DEPLOYMENT_PLAYBOOK.md` – Quick reference for deployment procedures
+- `DOCKER_DEVELOPMENT.md` – Docker development environment setup
+- `SSH_SETUP_GUIDE.md` – SSH key configuration for GitHub Actions
+- `AGENTS.md` – AI agent development guidelines
+- `scripts/validate-supabase-prod.mjs` – Supabase schema validation
 
 ## Testing & Linting
 ```bash

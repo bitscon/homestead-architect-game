@@ -1,30 +1,31 @@
 # Homestead Architect - Deployment Playbook
 
-This document provides complete instructions for deploying Homestead Architect in both development and production environments using Docker Swarm and Portainer.
+**Last Updated:** December 26, 2025  
+**Deployment Method:** Docker Compose with GitHub Container Registry
+
+This document provides quick reference instructions for deploying Homestead Architect using Docker Compose.
 
 ## Overview
 
 - **Development**: Full stack with local database, hot reload, and debugging tools
-- **Production**: Frontend-only stack using external Supabase backend
-- **Infrastructure**: Docker Swarm with Portainer management
-- **Repository**: All files in this repo; no external scripts required
+- **Production**: Frontend-only using external Supabase backend
+- **Infrastructure**: Docker Compose on single server (bitscon.net)
+- **Image Storage**: GitHub Container Registry (GHCR)
+- **Repository**: github.com/bitscon/homestead-architect-game
 
 ## Prerequisites
 
 ### Common Requirements
-- Docker Engine 20.10+ with Swarm mode enabled
-- Portainer (recommended) for stack management
-- Git access to this repository
-- Container registry access (production)
+- Docker Engine 20.10+
+- Docker Compose 1.29+
+- Git access to repository
+- GitHub account (for GHCR access)
 
-### Enable Docker Swarm
-```bash
-# Initialize Swarm on manager node
-docker swarm init
-
-# Or join existing cluster
-docker swarm join --token <TOKEN> <MANAGER_IP>:2377
-```
+### Production Server (bitscon.net)
+- User: billybs
+- App path: /opt/apps/homestead-architect
+- Port: 8082 (proxied via Plesk to myhome.homesteadarchitect.com)
+- Existing services: Supabase stack (ports 8081, 5432, etc.)
 
 ## Environment Configuration
 
@@ -57,8 +58,10 @@ PGADMIN_PORT=5050
 cp .env.prod.example .env.prod
 
 # Required variables
-PROD_IMAGE=your-registry.com/homestead-architect-prod:latest
-PROD_WEB_PORT=8080
+NODE_ENV=production
+PROD_WEB_PORT=8082
+VITE_APP_NAME=Homestead Architect
+VITE_APP_URL=https://myhome.homesteadarchitect.com
 VITE_SUPABASE_URL=https://supabase.bitscon.net
 VITE_SUPABASE_ANON_KEY=your_production_anon_key
 VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # for validation
@@ -66,48 +69,91 @@ VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # for validation
 
 ## Development Deployment
 
-### Option 1: Portainer (Recommended)
-1. Access Portainer web interface
-2. Navigate to **Stacks** → **Add stack**
-3. Set stack name: `homestead-architect-dev`
-4. Select **Web editor** and paste contents of `stack.dev.yml`
-5. Configure environment variables from `.env.dev`
-6. Click **Deploy the stack**
-
-### Option 2: CLI
+### Quick Start
 ```bash
-# Deploy development stack
-docker stack deploy -c stack.dev.yml homestead-architect-dev
+# Clone repository
+git clone https://github.com/bitscon/homestead-architect-game.git
+cd homestead-architect-game
 
-# View stack status
-docker service ls | grep homestead-architect-dev
+# Create environment file
+cp .env.example .env.dev
+# Edit .env.dev with your Supabase credentials
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Or start specific services
+docker-compose up -d frontend-dev postgres
+
+# View logs
+docker-compose logs -f frontend-dev
 ```
 
 ### Development Services
 - **Frontend**: `http://localhost:8081` (Vite dev server with hot reload)
-- **PostgreSQL**: `localhost:5432` (optional)
-- **PgAdmin**: `http://localhost:5050` (optional)
+- **PostgreSQL**: `localhost:5432` (optional local database)
+- **PgAdmin**: `http://localhost:5050` (use `--profile tools`)
 
 ### Development Workflow
 1. Make code changes locally
-2. Changes are automatically synced via volume mount
-3. Browser auto-refreshes with hot reload
-4. Debug tools available in browser dev tools
+2. Changes automatically sync via volume mount
+3. Browser auto-refreshes with hot module reload
+4. Use browser dev tools for debugging
 
 ## Production Deployment
 
-### 1. Build Production Image
+### Method 1: GitHub Actions (Recommended)
+
+This is the primary deployment method that automates the entire process.
+
+**Steps:**
+1. Navigate to [GitHub Actions](https://github.com/bitscon/homestead-architect-game/actions)
+2. Select "Deploy to Production" workflow
+3. Click "Run workflow"
+4. Select branch: `main`
+5. Type `deploy` to confirm
+6. Choose log level (`info` or `debug`)
+7. Click "Run workflow" button
+8. Monitor deployment progress
+
+**What happens:**
+- Builds Docker image from Dockerfile
+- Pushes to GitHub Container Registry (ghcr.io)
+- SSHs to bitscon.net
+- Pulls latest image
+- Deploys with Docker Compose on port 8082
+- Runs health checks
+- Reports success/failure
+
+**Timeline:** ~3-4 minutes total
+
+### Method 2: Manual Deployment
+
+For emergencies or when GitHub Actions is unavailable:
+
 ```bash
-# Set variables
-export REGISTRY_URL=your-registry.com
-export VERSION=v1.0.0
-export FULL_IMAGE_TAG=${REGISTRY_URL}/homestead-architect-prod:${VERSION}
+# SSH to production server
+ssh billybs@bitscon.net
+cd /opt/apps/homestead-architect
 
-# Build optimized production image
-docker build -f Dockerfile -t ${FULL_IMAGE_TAG} .
+# Pull latest code
+git fetch origin
+git checkout main
+git pull origin main
 
-# Push to registry
-docker push ${FULL_IMAGE_TAG}
+# Pull latest image from GHCR (if already built)
+sudo docker pull ghcr.io/bitscon/homestead-architect-game:latest
+
+# Or build locally
+sudo docker build -t ghcr.io/bitscon/homestead-architect-game:latest -f Dockerfile .
+
+# Deploy
+sudo docker-compose -f docker-compose.yml --profile production down
+sudo docker-compose -f docker-compose.yml --profile production up -d
+
+# Verify
+curl http://localhost:8082
+sudo docker-compose -f docker-compose.yml --profile production ps
 ```
 
 ### 2. Validate Production Environment

@@ -1,7 +1,13 @@
 # Homestead Architect - Complete Deployment Guide
 
 **Last Updated:** December 26, 2025  
-**Status:** Implementation Complete
+**Status:** ✅ Updated with GHCR & Docker Compose
+
+**Recent Changes:**
+- Switched from Docker Swarm to Docker Compose for production
+- Integrated GitHub Container Registry (GHCR) for image storage
+- Changed production port from 8081 to 8082 (Supabase Kong conflict resolution)
+- Added subdomain support for `myhome.homesteadarchitect.com`
 
 ---
 
@@ -24,7 +30,7 @@
 ┌─────────────────────────────────────────────────────────┐
 │  DEVELOPMENT (barn.workshop.home)                       │
 │  ├─ ~/apps/homestead-architect/                         │
-│  ├─ Docker stack for testing                            │
+│  ├─ Docker Compose for testing                          │
 │  ├─ Nginx proxy                                         │
 │  └─ Access: http://homestead-architect.barn.workshop.home│
 └─────────────────────────────────────────────────────────┘
@@ -33,24 +39,28 @@
 │  GITHUB (bitscon/homestead-architect-game)              │
 │  ├─ Source code repository                              │
 │  ├─ GitHub Actions workflow                             │
+│  ├─ GitHub Container Registry (GHCR)                    │
 │  └─ Manual deployment trigger                           │
 └─────────────────────────────────────────────────────────┘
-                      ↓ SSH deploy
+          ↓ build & push image    ↓ SSH deploy & pull image
 ┌─────────────────────────────────────────────────────────┐
 │  PRODUCTION (bitscon.net)                               │
 │  ├─ /opt/apps/homestead-architect/                      │
-│  ├─ Docker stack (Swarm mode)                           │
-│  ├─ Plesk (web management)                              │
-│  └─ Access: https://homesteadarchitect.com              │
+│  ├─ Docker Compose (production profile)                 │
+│  ├─ Port 8082 → Plesk proxy → myhome.homesteadarchitect.com│
+│  ├─ Existing Supabase stack (ports 8081, 5432, etc.)    │
+│  └─ Access: https://myhome.homesteadarchitect.com       │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### Deployment Flow
 
-1. **Develop** on barn.workshop.home
-2. **Commit & Push** to GitHub
-3. **Deploy** via GitHub Actions UI (manual button)
-4. **Live** on bitscon.net
+1. **Develop** on barn.workshop.home or locally
+2. **Commit & Push** to GitHub main branch
+3. **GitHub Actions** builds Docker image and pushes to GHCR
+4. **Deploy** via GitHub Actions UI (manual trigger, type "deploy")
+5. **Production server** pulls image from GHCR and deploys with Docker Compose
+6. **Live** at https://myhome.homesteadarchitect.com (via Plesk proxy)
 
 ---
 
@@ -66,11 +76,14 @@
 - Node.js 20+ and npm
 
 **On bitscon.net:**
-- Docker installed and running
-- Docker Swarm initialized
-- Plesk installed (optional)
+- Docker installed and running (version 20.10.24+)
+- Docker Compose installed (version 1.29.2+)
+- Plesk installed for proxy management
 - SSH access configured
-- Domain: homesteadarchitect.com
+- Domains: 
+  - homesteadarchitect.com (static homepage)
+  - myhome.homesteadarchitect.com (application portal)
+- Existing services running on ports: 8081 (Supabase), 5432, 6543, 4000, 5678
 
 ### One-Time Setup Tasks
 
@@ -125,11 +138,19 @@ nano .env.prod
 
 **Example .env.prod:**
 ```env
-VITE_SUPABASE_URL=https://your-prod-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-prod-anon-key
+# Application Settings
+NODE_ENV=production
+PROD_WEB_PORT=8082
 VITE_APP_NAME=Homestead Architect
+VITE_APP_URL=https://myhome.homesteadarchitect.com
+
+# Supabase Configuration
+VITE_SUPABASE_URL=https://supabase.bitscon.net
+VITE_SUPABASE_ANON_KEY=your-prod-anon-key
+VITE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Optional: Debug
 VITE_SHOW_GAME_DEBUG=false
-PROD_WEB_PORT=8080
 ```
 
 **⚠️ IMPORTANT: Never commit .env.prod to GitHub!**
@@ -191,8 +212,8 @@ git checkout -b feature/my-new-feature
 npm run dev
 # Access at http://localhost:5173
 
-# 5. Test with Docker stack (optional)
-docker stack deploy -c stack.dev.yml homestead-architect-dev
+# 5. Test with Docker Compose (optional)
+docker-compose up -d
 # Access at http://localhost:8081
 
 # 6. Commit changes
@@ -224,10 +245,10 @@ npm run dev
 # Access at http://localhost:5173
 ```
 
-**Option 2: Docker Stack (Production-like)**
+**Option 2: Docker Compose (Production-like)**
 ```bash
 cd ~/apps/homestead-architect
-docker stack deploy -c stack.dev.yml homestead-architect-dev
+docker-compose up -d
 # Access at http://localhost:8081
 ```
 
@@ -292,14 +313,16 @@ sudo nginx -t && sudo systemctl reload nginx
    - Deployment typically takes 2-3 minutes
 
 5. **Verify deployment**
-   - Access: `https://homesteadarchitect.com`
+   - Access: `https://myhome.homesteadarchitect.com`
    - Check functionality
+   - Verify Supabase integration works
 
 **Deployment Timeline:**
-- Build: ~60 seconds
-- Deploy: ~30 seconds
-- Health check: ~30 seconds
-- **Total: ~2-3 minutes**
+- Build Docker image: ~90-120 seconds
+- Push to GHCR: ~30-45 seconds
+- Deploy (pull + up): ~60 seconds
+- Health check: ~15 seconds
+- **Total: ~3-4 minutes**
 
 ### Method 2: Manual SSH Deployment (Fallback)
 
@@ -307,7 +330,7 @@ If GitHub Actions is unavailable:
 
 ```bash
 # SSH to production
-ssh user@bitscon.net
+ssh billybs@bitscon.net
 
 # Navigate to app directory
 cd /opt/apps/homestead-architect
@@ -317,41 +340,70 @@ git fetch origin
 git checkout main
 git pull origin main
 
-# Build Docker image
-docker build -t homestead-architect:latest -f Dockerfile .
+# Pull latest Docker image from GHCR (if already built)
+sudo docker pull ghcr.io/bitscon/homestead-architect-game:latest
 
-# Deploy stack
-docker stack deploy -c stack.prod.yml homestead-architect-prod
+# Or build locally if needed
+sudo docker build -t ghcr.io/bitscon/homestead-architect-game:latest -f Dockerfile .
+
+# Deploy with Docker Compose
+sudo docker-compose -f docker-compose.yml --profile production down
+sudo docker-compose -f docker-compose.yml --profile production up -d
 
 # Wait for service to start
-sleep 30
+sleep 15
 
 # Check status
-docker service ps homestead-architect-prod_frontend
+sudo docker-compose -f docker-compose.yml --profile production ps
 
 # Verify
-curl http://localhost:8080
+curl http://localhost:8082
 ```
 
 ### Rollback Procedure
 
 If deployment fails or causes issues:
 
+**Option 1: Rollback to previous GHCR image**
 ```bash
 # SSH to production
-ssh user@bitscon.net
+ssh billybs@bitscon.net
+cd /opt/apps/homestead-architect
 
-# Rollback service to previous version
-docker service rollback homestead-architect-prod_frontend
+# Find previous image tag
+sudo docker images | grep ghcr.io/bitscon/homestead-architect-game
 
-# Verify rollback
-docker service ps homestead-architect-prod_frontend
+# Pull specific previous version (replace prod-abc1234 with actual tag)
+sudo docker pull ghcr.io/bitscon/homestead-architect-game:prod-abc1234
 
-# Check logs
-docker service logs -f homestead-architect-prod_frontend
+# Update docker-compose to use that tag temporarily, or:
+# Stop current deployment
+sudo docker-compose -f docker-compose.yml --profile production down
+
+# Start with previous image
+sudo docker tag ghcr.io/bitscon/homestead-architect-game:prod-abc1234 ghcr.io/bitscon/homestead-architect-game:latest
+sudo docker-compose -f docker-compose.yml --profile production up -d
+
+# Verify
+curl http://localhost:8082
 ```
 
-**Rollback time: ~30 seconds**
+**Option 2: Rollback via git**
+```bash
+# SSH to production
+ssh billybs@bitscon.net
+cd /opt/apps/homestead-architect
+
+# Rollback code
+git log --oneline -5  # Find previous commit
+git checkout <previous-commit-hash>
+
+# Rebuild and deploy
+sudo docker build -t ghcr.io/bitscon/homestead-architect-game:latest -f Dockerfile .
+sudo docker-compose -f docker-compose.yml --profile production up -d --force-recreate
+```
+
+**Rollback time: ~1-2 minutes**
 
 ---
 
@@ -385,57 +437,57 @@ Permission denied (publickey)
 - Test key manually: `ssh -i ~/.ssh/github_deploy user@bitscon.net`
 - Check file permissions on production: `chmod 600 ~/.ssh/authorized_keys`
 
-#### 3. Docker stack deploy fails
+#### 3. Docker Compose deployment fails
 
 **Symptoms:**
 ```
-service create failed: Error response from daemon
+ERROR: Cannot start service frontend-prod: port is already allocated
 ```
 
 **Solutions:**
 ```bash
-# Check if swarm is initialized
-docker info | grep Swarm
-# Should show: Swarm: active
+# Check port availability
+sudo netstat -tulpn | grep 8082
 
-# If not active:
-docker swarm init
+# Check if old containers are still running
+sudo docker ps -a | grep homestead
 
-# Check existing services
-docker service ls
+# Stop and remove old containers
+sudo docker-compose -f docker-compose.yml --profile production down
+sudo docker ps -a | grep homestead | awk '{print $1}' | xargs sudo docker rm -f
 
-# Remove conflicting services if needed
-docker stack rm homestead-architect-prod
-sleep 10
-docker stack deploy -c stack.prod.yml homestead-architect-prod
+# Try deployment again
+sudo docker-compose -f docker-compose.yml --profile production up -d
 ```
 
-#### 4. Service won't start
+#### 4. Container won't start
 
 **Symptoms:**
 ```
-desired state = shutdown
+Container exits immediately or shows "Exited (1)"
 ```
 
 **Solutions:**
 ```bash
 # Check logs
-docker service logs homestead-architect-prod_frontend
+sudo docker-compose -f docker-compose.yml --profile production logs frontend-prod
 
 # Common issues:
 # - Missing environment variables
-# - Port conflict
+# - Port conflict (check 8082)
 # - Image build failed
+# - Nginx configuration error
 
 # Verify environment file exists
 ls -la /opt/apps/homestead-architect/.env.prod
+cat /opt/apps/homestead-architect/.env.prod | grep VITE_
 
-# Check port availability
-sudo netstat -tlnp | grep 8080
+# Check port availability (should be free)
+sudo netstat -tlnp | grep 8082
 
-# Rebuild image
+# Rebuild image if needed
 cd /opt/apps/homestead-architect
-docker build -t homestead-architect:latest -f Dockerfile .
+sudo docker build -t ghcr.io/bitscon/homestead-architect-game:latest -f Dockerfile .
 ```
 
 #### 5. Application accessible but broken
@@ -447,49 +499,54 @@ docker build -t homestead-architect:latest -f Dockerfile .
 **Solutions:**
 ```bash
 # Verify environment variables in running container
-docker service inspect homestead-architect-prod_frontend
+sudo docker-compose -f docker-compose.yml --profile production config | grep VITE_
 
 # Check .env.prod has correct Supabase URL and keys
-ssh user@bitscon.net
+ssh billybs@bitscon.net
 cd /opt/apps/homestead-architect
 cat .env.prod | grep VITE_SUPABASE
 
 # Update and redeploy
-docker stack deploy -c stack.prod.yml homestead-architect-prod
+sudo docker-compose -f docker-compose.yml --profile production up -d --force-recreate
 ```
 
 ### Debug Commands
 
-**Check service status:**
+**Check container status:**
 ```bash
-docker service ps homestead-architect-prod_frontend
-docker service ls | grep homestead
+sudo docker-compose -f docker-compose.yml --profile production ps
+sudo docker ps | grep homestead
 ```
 
 **View logs:**
 ```bash
 # Last 100 lines
-docker service logs --tail 100 homestead-architect-prod_frontend
+sudo docker-compose -f docker-compose.yml --profile production logs --tail 100 frontend-prod
 
 # Follow logs
-docker service logs -f homestead-architect-prod_frontend
+sudo docker-compose -f docker-compose.yml --profile production logs -f frontend-prod
 
 # Search logs
-docker service logs homestead-architect-prod_frontend | grep ERROR
+sudo docker-compose -f docker-compose.yml --profile production logs frontend-prod | grep ERROR
 ```
 
-**Inspect service configuration:**
+**Inspect container configuration:**
 ```bash
-docker service inspect homestead-architect-prod_frontend --pretty
+sudo docker-compose -f docker-compose.yml --profile production config
+sudo docker inspect $(sudo docker ps | grep frontend-prod | awk '{print $1}')
 ```
 
 **Access running container:**
 ```bash
 # Get container ID
-CONTAINER_ID=$(docker ps | grep homestead-architect-prod_frontend | awk '{print $1}')
+CONTAINER_ID=$(sudo docker ps | grep frontend-prod | awk '{print $1}')
 
 # Exec into container
-docker exec -it $CONTAINER_ID sh
+sudo docker exec -it $CONTAINER_ID sh
+
+# Inside container, check nginx
+ls -la /usr/share/nginx/html
+cat /etc/nginx/conf.d/default.conf
 ```
 
 ---
@@ -525,11 +582,11 @@ my-new-app/
 ├── .env.prod.example     # Production template
 ├── .gitignore            # Must include .env.dev and .env.prod
 ├── Dockerfile            # Production build
-├── stack.dev.yml         # Development Docker stack
-├── stack.prod.yml        # Production Docker stack
+├── Dockerfile.dev        # Development build (optional)
+├── docker-compose.yml    # Docker Compose configuration
 └── .github/
     └── workflows/
-        └── deploy.yml    # GitHub Actions deployment
+        └── deploy.yml    # GitHub Actions deployment with GHCR
 ```
 
 **5. .gitignore Template**
@@ -617,18 +674,21 @@ id_rsa*
 |------|---------|
 | Start dev server | `cd ~/apps/homestead-architect && npm run dev` |
 | Deploy to production | GitHub Actions UI → "Run workflow" → Type "deploy" |
-| Check prod status | `ssh user@bitscon.net docker service ps homestead-architect-prod_frontend` |
-| View prod logs | `ssh user@bitscon.net docker service logs -f homestead-architect-prod_frontend` |
-| Rollback prod | `ssh user@bitscon.net docker service rollback homestead-architect-prod_frontend` |
+| Check prod status | `ssh billybs@bitscon.net sudo docker-compose -f docker-compose.yml --profile production ps` |
+| View prod logs | `ssh billybs@bitscon.net "cd /opt/apps/homestead-architect && sudo docker-compose --profile production logs -f"` |
+| Restart prod | `ssh billybs@bitscon.net "cd /opt/apps/homestead-architect && sudo docker-compose --profile production restart"` |
 
 ### Important URLs
 
 | Service | URL |
 |---------|-----|
-| Production App | https://homesteadarchitect.com |
+| Production App | https://myhome.homesteadarchitect.com |
+| Static Homepage | https://homesteadarchitect.com |
 | GitHub Repo | https://github.com/bitscon/homestead-architect-game |
 | GitHub Actions | https://github.com/bitscon/homestead-architect-game/actions |
+| GitHub Registry | https://github.com/bitscon/homestead-architect-game/pkgs/container/homestead-architect-game |
 | Dev Server | http://localhost:5173 or http://homestead-architect.barn.workshop.home |
+| Production Supabase | https://supabase.bitscon.net |
 
 ### Important Paths
 
