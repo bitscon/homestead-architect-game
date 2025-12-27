@@ -144,6 +144,27 @@ homestead-architect/
 └── [documentation files]
 ```
 
+### 🛠️ Project Management
+
+We use **GitHub Issues** as a comprehensive project management system:
+
+**📋 Project Board:** [github.com/bitscon/homestead-architect-game/projects](https://github.com/bitscon/homestead-architect-game/projects)  
+**📝 Issues List:** [github.com/bitscon/homestead-architect-game/issues](https://github.com/bitscon/homestead-architect-game/issues)  
+**📊 Templates & Guides:** [PROJECT_MANAGEMENT_SETUP.md](PROJECT_MANAGEMENT_SETUP.md) | [FIRST_PROJECT_ISSUE.md](FIRST_PROJECT_ISSUE.md) | [GITHUB_QUICK_START.md](GITHUB_QUICK_START.md)
+
+**🏷️ Issue Labels:**  
+- 🏗️ Infrastructure (VPS, Docker, deployment)  
+- ✨ Feature (new functionality)  
+- 🐛 Bug (fixes and errors)  
+- 📝 Documentation (guides, README)  
+- 🚀 Deployment (CI/CD, releases)  
+- 🎯 Goal (milestones, objectives)  
+- ✅ Testing (QA, test coverage)  
+- 📊 Performance (optimization, speed)  
+- 🔍 Investigation (research, debugging)
+
+**💡 Workflow:** Feature request → Development → Testing → Production
+
 ---
 
 ## 🔧 Development
