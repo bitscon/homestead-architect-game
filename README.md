@@ -200,6 +200,30 @@ See `.env.example` for all available options.
 - **Proxy:** Plesk/Nginx → myhome.homesteadarchitect.com
 - **Database:** Supabase at supabase.bitscon.net
 
+### What to Expect
+
+> **Quick Reference:** Before deploying, [monitor the workflow](https://github.com/bitscon/homestead-architect-game/actions)
+
+**Deployment Process:**
+1. **Build & Push** (~2-3 min): GitHub builds Docker image and pushes to GHCR
+2. **Deploy** (~1-2 min): SSH to production server and starts containers
+3. **Health Check** (~15 sec): Validates app is responding on port 8082
+
+**Success Indicators:**
+- ✅ "Build and push Docker image" (green checkmark)
+- ✅ "Containers are running" 
+- ✅ "Health check passed - Application responding on port 8082"
+- ✅ "Deployment completed successfully!"
+
+**Access After Deployment:**
+- **Local test:** `curl http://localhost:8082` (on production server)
+- **Public URL:** `https://myhome.homesteadarchitect.com` (after Plesk proxy)
+
+**If Issues Occur:**
+- 🔴 "Docker command failed" - Check container logs
+- 🔴 "Health check failed" - App not responding on port 8082
+- 🔴 "SSH connection failed" - Check GitHub secrets configuration
+
 ### Automated Deployment (Recommended)
 
 We use GitHub Actions for automated deployments:
