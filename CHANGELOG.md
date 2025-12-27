@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-12-26
+
+### Fixed
+
+#### Docker Compose Profile Configuration
+- **Added `dev` profile to postgres service** to prevent port 5432 conflict with existing Supabase PostgreSQL on production server
+- **Added `dev` profile to frontend-dev service** for consistency and proper profile isolation
+- Fixed error: "Bind for 0.0.0.0:5432 failed: port is already allocated" during production deployment
+- Production profile (`--profile production`) now only starts `frontend-prod` service
+- Development profile (`--profile dev`) starts `frontend-dev` and `postgres` services
+- Tools profile (`--profile tools`) continues to control `pgadmin` service separately
+
+**Impact:** Production deployments no longer attempt to start development services, preventing port conflicts with existing infrastructure.
+
+**Files Changed:**
+- `docker-compose.yml` - Added `profiles: - dev` to `postgres` and `frontend-dev` services
+
+### Added
+
+#### Repository Documentation
+- **Created comprehensive README.md** for GitHub repository homepage
+- Added project overview, features, tech stack, and architecture
+- Included quick start guides for local and Docker development
+- Added deployment instructions (automated and manual)
+- Documented project structure and development workflows
+- Added gamification system overview
+- Included security considerations and contribution guidelines
+- Added roadmap for future features
+
 ## [1.1.0] - 2025-12-26
 
 ### Production Infrastructure

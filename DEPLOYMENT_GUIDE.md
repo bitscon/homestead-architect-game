@@ -60,8 +60,35 @@
 2. **Commit & Push** to GitHub main branch
 3. **GitHub Actions** builds Docker image and pushes to GHCR
 4. **Deploy** via GitHub Actions UI (manual trigger, type "deploy")
-5. **Production server** pulls image from GHCR and deploys with Docker Compose
+5. **Production server** pulls image from GHCR and deploys with Docker Compose (`--profile production`)
 6. **Live** at https://myhome.homesteadarchitect.com (via Plesk proxy)
+
+### Docker Compose Profiles
+
+Homestead Architect uses Docker Compose profiles to manage different environments:
+
+| Profile | Services Started | Use Case |
+|---------|-----------------|----------|
+| `dev` | `frontend-dev`, `postgres` | Local development with hot reload |
+| `production` | `frontend-prod` | Production deployment (port 8082) |
+| `tools` | `pgadmin` | Database administration |
+
+**Examples:**
+```bash
+# Development environment
+docker-compose --profile dev up -d
+
+# Production environment (no postgres to avoid port conflicts)
+docker-compose --profile production up -d
+
+# Database admin tools
+docker-compose --profile tools up -d
+
+# Multiple profiles
+docker-compose --profile dev --profile tools up -d
+```
+
+**Important:** Production profile ONLY starts `frontend-prod` to prevent port 5432 conflicts with existing Supabase PostgreSQL on production server.
 
 ---
 
@@ -260,8 +287,13 @@ npm run dev
 **Option 2: Docker Compose (Production-like)**
 ```bash
 cd ~/apps/homestead-architect
-docker-compose up -d
+
+# Development environment with postgres
+docker-compose --profile dev up -d
 # Access at http://localhost:8081
+
+# Or without local postgres (use external Supabase only)
+docker-compose up -d frontend-dev
 ```
 
 **Option 3: Nginx Proxy (Domain-like)**

@@ -81,14 +81,31 @@ cd homestead-architect-game
 cp .env.example .env.dev
 # Edit .env.dev with your Supabase credentials
 
-# Start with Docker Compose
-docker-compose up -d
-
-# Or start specific services
-docker-compose up -d frontend-dev postgres
+# Start development environment with Docker Compose
+docker-compose --profile dev up -d
 
 # View logs
 docker-compose logs -f frontend-dev
+```
+
+### Docker Compose Profiles
+
+| Profile | Services | Purpose |
+|---------|----------|---------|
+| `dev` | frontend-dev, postgres | Local development |
+| `production` | frontend-prod | Production deployment |
+| `tools` | pgadmin | Database admin |
+
+**Usage:**
+```bash
+# Development
+docker-compose --profile dev up -d
+
+# Production
+docker-compose --profile production up -d
+
+# Database tools
+docker-compose --profile tools up -d
 ```
 
 ### Development Services
