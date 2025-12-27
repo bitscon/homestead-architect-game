@@ -30,7 +30,7 @@ const HomesteadJournal = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: Omit<JournalEntry, 'id' | 'user_id' | 'created_at'>) =>
       createJournalEntry({
         ...data,
         user_id: user!.id,
@@ -62,7 +62,7 @@ const HomesteadJournal = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Omit<JournalEntry, 'id' | 'user_id' | 'created_at'>> }) =>
       updateJournalEntry(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
@@ -101,7 +101,7 @@ const HomesteadJournal = () => {
     },
   });
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: Omit<JournalEntry, 'id' | 'user_id' | 'created_at'>) => {
     if (selectedEntry) {
       updateMutation.mutate({ id: selectedEntry.id, data });
     } else {

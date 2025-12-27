@@ -29,7 +29,7 @@ type FormData = z.infer<typeof formSchema>;
 
 interface BreedingFormProps {
   event?: BreedingEvent | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: FormData) => void;
   onCancel: () => void;
 }
 

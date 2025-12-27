@@ -69,7 +69,7 @@ const HomesteadGoals = () => {
   };
 
   const createMutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: Omit<Database['public']['Tables']['homestead_goals']['Insert'], 'user_id'>) =>
       createGoal({
         ...data,
         user_id: user!.id,
@@ -100,7 +100,7 @@ const HomesteadGoals = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: Database['public']['Tables']['homestead_goals']['Update'] }) =>
       updateGoal(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['homestead-goals'] });
@@ -141,7 +141,7 @@ const HomesteadGoals = () => {
   });
 
   const createUpdateMutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: Omit<Database['public']['Tables']['goal_updates']['Insert'], 'goal_id' | 'user_id'>) =>
       createGoalUpdate({
         ...data,
         goal_id: updateGoalId || selectedGoal!.id,
@@ -166,7 +166,7 @@ const HomesteadGoals = () => {
     },
   });
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: Omit<Database['public']['Tables']['homestead_goals']['Insert'], 'user_id'>) => {
     if (selectedGoal && showForm) {
       updateMutation.mutate({ id: selectedGoal.id, data });
     } else {

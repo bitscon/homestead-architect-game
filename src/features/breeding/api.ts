@@ -58,7 +58,15 @@ const deriveEventType = (metadata: Record<string, unknown>, action?: string): Br
   return 'breeding';
 };
 
-const mapXpEventToBreeding = (row: any): BreedingEvent => {
+interface XpEventRow {
+  id: string;
+  user_id: string;
+  action: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+const mapXpEventToBreeding = (row: XpEventRow): BreedingEvent => {
   const metadata = (row.metadata || {}) as Record<string, unknown>;
   return {
     id: row.id,
@@ -79,7 +87,7 @@ const mapXpEventToBreeding = (row: any): BreedingEvent => {
   };
 };
 
-const isBreedingXpEvent = (row: any) => {
+const isBreedingXpEvent = (row: XpEventRow) => {
   const metadata = (row.metadata || {}) as Record<string, unknown>;
   const rawType = toStringValue(metadata.event_type) || toStringValue(metadata.type) || '';
   const feature = toStringValue(metadata.feature) || toStringValue(metadata.module) || '';

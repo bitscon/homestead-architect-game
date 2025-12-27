@@ -52,7 +52,7 @@ const BreedingTracker = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: Omit<BreedingEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'>) =>
       createBreedingEvent({
         ...data,
         user_id: user!.id,
@@ -84,7 +84,7 @@ const BreedingTracker = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Omit<BreedingEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'>> }) =>
       updateBreedingEvent(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['breeding-events'] });
@@ -106,7 +106,7 @@ const BreedingTracker = () => {
     },
   });
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: Omit<BreedingEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     if (selectedEvent) {
       updateMutation.mutate({ id: selectedEvent.id, data });
     } else {

@@ -44,7 +44,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface GoalFormProps {
   goal?: HomesteadGoal | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: FormValues) => void;
   onCancel?: () => void;
 }
 

@@ -11,7 +11,7 @@ interface XPEvent {
   action: string;
   xp: number;
   created_at: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const GameDebugPanel = () => {

@@ -45,8 +45,12 @@ export async function getLeaderboard(limit: number = 20): Promise<LeaderboardEnt
       return [];
     }
 
-    const userIds = privacyData.map((p: any) => p.user_id);
-    const displayNameMap = new Map(privacyData.map((p: any) => [p.user_id, p.display_name]));
+    interface PrivacyRow {
+      user_id: string;
+      display_name: string;
+    }
+    const userIds = privacyData.map((p: PrivacyRow) => p.user_id);
+    const displayNameMap = new Map(privacyData.map((p: PrivacyRow) => [p.user_id, p.display_name]));
 
     // Get stats for opted-in users
     const { data: statsData, error: statsError } = await supabase
@@ -61,7 +65,12 @@ export async function getLeaderboard(limit: number = 20): Promise<LeaderboardEnt
       return [];
     }
 
-    return (statsData || []).map((stat: any, index: number) => ({
+    interface StatRow {
+      user_id: string;
+      total_xp: number;
+      level: number;
+    }
+    return (statsData || []).map((stat: StatRow, index: number) => ({
       user_id: stat.user_id,
       display_name: displayNameMap.get(stat.user_id) || 'Anonymous Homesteader',
       total_xp: stat.total_xp,
@@ -152,7 +161,11 @@ export async function getUserRank(): Promise<number | null> {
       return null;
     }
 
-    const rank = (data || []).findIndex((s: any) => s.user_id === userId) + 1;
+    interface RankRow {
+      user_id: string;
+      total_xp: number;
+    }
+    const rank = (data || []).findIndex((s: RankRow) => s.user_id === userId) + 1;
     return rank > 0 ? rank : null;
   } catch (error) {
     console.error('[Leaderboard] Exception fetching rank:', error);

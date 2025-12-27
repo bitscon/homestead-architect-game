@@ -70,7 +70,7 @@ async function getCurrentUserId(): Promise<string | null> {
 export async function awardXP(
   action: string,
   xp: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   try {
     const userId = await getCurrentUserId();
