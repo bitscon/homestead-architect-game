@@ -1,0 +1,32 @@
+{
+  "name": "homestead-architect-website",
+  "version": "1.0.0",
+  "description": "Standalone landing page for Homestead Architect",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node api/create-checkout-session.js"
+  },
+  "dependencies": {
+    "@stripe/stripe-js": "^8.6.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.462.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react-swc": "^3.11.0",
+    "autoprefixer": "^10.4.21",
+    "express": "^4.21.2",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "terser": "^5.44.1",
+    "typescript": "^5.8.3",
+    "vite": "^7.3.0"
+  }
+}

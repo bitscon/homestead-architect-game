@@ -1,0 +1,17 @@
+{
+  "name": "homestead-architect-api",
+  "version": "1.0.0",
+  "description": "Stripe checkout API for Homestead Architect",
+  "main": "deploy-api.js",
+  "scripts": {
+    "start": "node deploy-api.js",
+    "dev": "node deploy-api.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "stripe": "^13.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
