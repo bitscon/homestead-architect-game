@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -36,7 +36,7 @@ const Dashboard = () => {
   const [zipCode, setZipCode] = useState('');
   const displayName = profile?.first_name || user?.email?.split('@')[0] || 'there';
   
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
 
   // Fetch data
@@ -62,20 +62,47 @@ const Dashboard = () => {
   });
 
   // Calculate upcoming tasks (next 7 days)
-  const upcomingTasks = tasks
-    .filter(t => t.due_date && isAfter(new Date(t.due_date), now) && isBefore(new Date(t.due_date), addDays(now, 7)))
-    .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
-    .slice(0, 5);
+  const upcomingTasks = useMemo(() => 
+    tasks
+      .filter(t => t.due_date && isAfter(new Date(t.due_date), now) && isBefore(new Date(t.due_date), addDays(now, 7)))
+      .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
+      .slice(0, 5),
+    [tasks, now]
+  );
 
-  // Calculate monthly finances
-  const monthlyIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const monthlyExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-  const netIncome = monthlyIncome - monthlyExpenses;
+  // Calculate monthly finances (optimized: single iteration)
+  const { monthlyIncome, monthlyExpenses, netIncome } = useMemo(() => {
+    const { income, expense } = transactions.reduce(
+      (acc, t) => ({
+        income: acc.income + (t.type === 'income' ? t.amount : 0),
+        expense: acc.expense + (t.type === 'expense' ? t.amount : 0),
+      }),
+      { income: 0, expense: 0 }
+    );
+    return {
+      monthlyIncome: income,
+      monthlyExpenses: expense,
+      netIncome: income - expense,
+    };
+  }, [transactions]);
 
-  // Calculate task statistics
-  const completedTasksCount = tasks.filter(t => t.status === 'completed').length;
-  const activeTasksCount = tasks.filter(t => t.status === 'in_progress').length;
-  const pendingTasksCount = tasks.filter(t => t.status === 'pending').length;
+  // Calculate task statistics (optimized: single iteration)
+  const { completedTasksCount, activeTasksCount, pendingTasksCount } = useMemo(() => {
+    const counts = tasks.reduce(
+      (acc, t) => {
+        if (t.status === 'completed') acc.completed++;
+        else if (t.status === 'in_progress') acc.active++;
+        else if (t.status === 'pending') acc.pending++;
+        return acc;
+      },
+      { completed: 0, active: 0, pending: 0 }
+    );
+    return {
+      completedTasksCount: counts.completed,
+      activeTasksCount: counts.active,
+      pendingTasksCount: counts.pending,
+    };
+  }, [tasks]);
 
   // Quick actions
   const quickActions = [

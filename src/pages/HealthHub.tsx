@@ -72,12 +72,6 @@ export default function HealthHub() {
   const [dosageWeight, setDosageWeight] = useState<string>('');
   const [calculatedDose, setCalculatedDose] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (user?.id) {
-      loadData();
-    }
-  }, [user?.id]);
-
   const loadData = async () => {
     if (!user?.id) return;
 
@@ -105,6 +99,13 @@ export default function HealthHub() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      loadData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const handleSubmit = async (data: AnimalInsert) => {
     if (!user?.id) return;

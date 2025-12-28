@@ -27,6 +27,7 @@ export default function PropertyAssessment() {
     if (user?.id) {
       loadProperties();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const loadProperties = async () => {

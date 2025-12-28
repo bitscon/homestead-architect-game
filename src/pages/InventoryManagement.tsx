@@ -30,6 +30,7 @@ export default function InventoryManagement() {
     if (user?.id) {
       loadInventory();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const loadInventory = async () => {

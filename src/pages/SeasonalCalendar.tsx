@@ -39,6 +39,7 @@ export default function SeasonalCalendar() {
     if (user?.id) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, selectedPropertyId]);
 
   const loadData = async () => {

@@ -56,6 +56,7 @@ export default function Infrastructure() {
 
   useEffect(() => {
     loadProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadProjects = async () => {

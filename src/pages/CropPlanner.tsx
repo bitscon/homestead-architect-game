@@ -248,12 +248,6 @@ const CropPlanner = () => {
     loadCropOptions();
   }, []);
 
-  useEffect(() => {
-    if (user?.id) {
-      loadRotationPlans();
-    }
-  }, [user?.id]);
-
   const loadRotationPlans = async () => {
     if (!user?.id) return;
 
@@ -268,6 +262,13 @@ const CropPlanner = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      loadRotationPlans();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Combine mock crop data with database crop options for consistency
   // Use mock data for rich display information, but ensure it includes database crops

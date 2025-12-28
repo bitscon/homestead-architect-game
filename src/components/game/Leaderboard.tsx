@@ -57,7 +57,7 @@ export const Leaderboard = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [profile?.first_name, user?.email]);
 
   useEffect(() => {
     loadData();

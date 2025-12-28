@@ -46,19 +46,6 @@ export default function HomesteadBalance() {
   const [monthlyLoading, setMonthlyLoading] = useState(true);
   const [filters, setFilters] = useState<TransactionFilters>({});
 
-  useEffect(() => {
-    if (user?.id) {
-      loadData();
-      loadMonthlyTransactions();
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (user?.id) {
-      loadTransactions();
-    }
-  }, [filters, user?.id]);
-
   const loadData = async () => {
     if (!user?.id) return;
 
@@ -122,6 +109,21 @@ export default function HomesteadBalance() {
       setMonthlyLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      loadData();
+      loadMonthlyTransactions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadTransactions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, user?.id]);
 
   // Category handlers
   const handleCreateCategory = async (data: CategoryInsert) => {

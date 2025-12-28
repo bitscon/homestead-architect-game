@@ -34,49 +34,49 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Helper: Promise timeout (prevents infinite spinners from hung requests)
-  const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
-    let timeoutId: number | undefined;
-    const timeout = new Promise<T>((_, reject) => {
-      timeoutId = window.setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
-    });
-
-    try {
-      return await Promise.race([promise, timeout]);
-    } finally {
-      if (timeoutId) window.clearTimeout(timeoutId);
-    }
-  };
-
-  // Helper function to fetch user profile (fails fast; never blocks app boot forever)
-  const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
-    try {
-      const req = supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single<Profile>()
-        .then((response) => response);
-
-      const { data, error } = await withTimeout(Promise.resolve(req), 8000, 'fetchUserProfile');
-
-      if (error) {
-        console.error('[AuthContext] Error fetching profile:', error);
-        return null;
-      }
-
-      return (data as Profile) ?? null;
-    } catch (error) {
-      console.error('[AuthContext] Exception fetching profile:', error);
-      return null;
-    }
-  };
-
   useEffect(() => {
     let mounted = true;
 
     const safeSetLoadingFalse = () => {
       if (mounted) setLoading(false);
+    };
+
+    // Helper: Promise timeout (prevents infinite spinners from hung requests)
+    const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+      let timeoutId: number | undefined;
+      const timeout = new Promise<T>((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+      });
+
+      try {
+        return await Promise.race([promise, timeout]);
+      } finally {
+        if (timeoutId) window.clearTimeout(timeoutId);
+      }
+    };
+
+    // Helper function to fetch user profile (fails fast; never blocks app boot forever)
+    const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
+      try {
+        const req = supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single<Profile>()
+          .then((response) => response);
+
+        const { data, error } = await withTimeout(Promise.resolve(req), 8000, 'fetchUserProfile');
+
+        if (error) {
+          console.error('[AuthContext] Error fetching profile:', error);
+          return null;
+        }
+
+        return (data as Profile) ?? null;
+      } catch (error) {
+        console.error('[AuthContext] Exception fetching profile:', error);
+        return null;
+      }
     };
 
     const applySession = async (nextSession: Session | null) => {
@@ -87,7 +87,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
       // DEV logging: auth state (no secrets)
       if (import.meta.env.DEV) {
-        logEvent('auth_state', { hasSession: !!nextSession, hasUser: !!nextSession?.user });
+        logEvent('auth_state', `Session: ${!!nextSession}, User: ${!!nextSession?.user}`, { hasSession: !!nextSession, hasUser: !!nextSession?.user });
       }
 
       // If we have a session, clear loading immediately (auth is done, profile can load in background)
