@@ -4,7 +4,7 @@ import { BookOpen, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { JournalEntryForm } from '@/features/journal/JournalEntryForm';
 import { JournalEntryList } from '@/features/journal/JournalEntryList';
 import {
@@ -18,7 +18,6 @@ import { awardXP } from '@/game/gameEngine';
 
 const HomesteadJournal = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -45,19 +44,12 @@ const HomesteadJournal = () => {
         });
       }
       
-      toast({
-        title: 'Success',
-        description: 'Journal entry created successfully',
-      });
+      toast.success('Journal entry created successfully');
       setShowForm(false);
       setSelectedEntry(null);
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Failed to create journal entry');
     },
   });
 
@@ -66,19 +58,12 @@ const HomesteadJournal = () => {
       updateJournalEntry(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
-      toast({
-        title: 'Success',
-        description: 'Journal entry updated successfully',
-      });
+      toast.success('Journal entry updated successfully');
       setSelectedEntry(null);
       setShowForm(false);
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Failed to update journal entry');
     },
   });
 
@@ -86,18 +71,11 @@ const HomesteadJournal = () => {
     mutationFn: deleteJournalEntry,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
-      toast({
-        title: 'Success',
-        description: 'Journal entry deleted successfully',
-      });
+      toast.success('Journal entry deleted successfully');
       setSelectedEntry(null);
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Failed to delete journal entry');
     },
   });
 

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Target, BookOpen, Heart, Sprout, Activity, Scale, Wrench, Boxes, Book, MapPin, Calendar, Compass, Users, Shield, Trophy } from "lucide-react";
+import { Home, Target, BookOpen, Heart, Sprout, Activity, Scale, Wrench, Boxes, MapPin, Calendar, Compass, Users, Shield, Trophy } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -17,16 +17,15 @@ const navSections = [
   {
     title: "Planning Tools",
     items: [
-      { title: "Breeding Tracker", href: "/breeding-tracker", icon: Heart },
+      { title: "Breeding Tracker", href: "/breeding", icon: Heart },
       { title: "Crop Planner", href: "/crop-planner", icon: Sprout },
-      { title: "Health Hub", href: "/health-hub", icon: Activity },
-      { title: "Homestead Balance", href: "/homestead-balance", icon: Scale },
+      { title: "Health Hub", href: "/animals", icon: Activity },
+      { title: "Homestead Balance", href: "/finance", icon: Scale },
       { title: "Infrastructure", href: "/infrastructure", icon: Wrench },
       { title: "Inventory Management", href: "/inventory", icon: Boxes },
-      // { title: "Knowledge Base", href: "/knowledge-base", icon: Book },
-      { title: "Property Assessment", href: "/property-assessment", icon: MapPin },
-      { title: "Seasonal Calendar", href: "/seasonal-calendar", icon: Calendar },
-      { title: "Strategic Planner", href: "/strategic-planner", icon: Compass },
+      { title: "Property Assessment", href: "/property", icon: MapPin },
+      { title: "Seasonal Calendar", href: "/calendar", icon: Calendar },
+      { title: "Strategic Planner", href: "/strategic-planning", icon: Compass },
     ],
   },
   {
@@ -148,7 +147,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* User Section */}
       <div className="border-t border-border py-4 px-4">
-        <Link to="/user-profile" className="block">
+        <Link to="/profile" className="block">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarFallback className="bg-primary text-primary-foreground">

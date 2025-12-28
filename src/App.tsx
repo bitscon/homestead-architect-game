@@ -67,15 +67,6 @@ const App = () => {
                 <Route path="/profile" element={<UserProfile />} />
                 <Route path="/achievements" element={<Achievements />} />
                 <Route path="/crop-planner" element={<CropPlanner />} />
-
-                {/* Backward compatible protected routes (keep DEV links working) */}
-                <Route path="/homestead-balance" element={<HomesteadBalance />} />
-                <Route path="/seasonal-calendar" element={<SeasonalCalendar />} />
-                <Route path="/health-hub" element={<HealthHub />} />
-                <Route path="/property-assessment" element={<PropertyAssessment />} />
-                <Route path="/breeding-tracker" element={<BreedingTracker />} />
-                <Route path="/strategic-planner" element={<StrategicPlanningHub />} />
-                <Route path="/user-profile" element={<UserProfile />} />
               </Route>
 
               {/* Catch-all */}

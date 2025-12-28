@@ -39,7 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Settings, Edit2, Trash2, Bird, Pill, Search, Calculator, AlertTriangle, Scissors, Calendar, History } from 'lucide-react';
@@ -48,7 +48,6 @@ import { awardXP } from '@/game/gameEngine';
 
 export default function HealthHub() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);

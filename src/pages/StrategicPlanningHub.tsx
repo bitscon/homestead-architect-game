@@ -3,9 +3,8 @@ import { StatCard } from "@/components/ui/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Sprout, Calendar, TrendingUp, CheckCircle2, Cloud, Droplets, Wind, Lightbulb } from "lucide-react";
+import { MapPin, Sprout, Calendar, TrendingUp, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { getProperties } from "@/features/properties/api";
@@ -210,47 +209,6 @@ export default function StrategicPlanningHub() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="bg-blue-50 dark:bg-blue-950/30">
-              <CardTitle className="flex items-center gap-2">
-                <Cloud className="h-5 w-5 text-blue-500" />
-                Weather Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="text-center mb-6">
-                  <div className="text-5xl font-bold text-foreground mb-2">72°F</div>
-                  <div className="text-xl text-muted-foreground">Sunny</div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <Droplets className="h-4 w-4 text-blue-500" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Humidity</div>
-                      <div className="font-medium">65%</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Wind className="h-4 w-4 text-blue-500" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Wind</div>
-                      <div className="font-medium">8 mph</div>
-                    </div>
-                  </div>
-                </div>
-
-                <Alert className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 mt-4">
-                  <Lightbulb className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <AlertDescription className="text-green-800 dark:text-green-200 ml-2">
-                    <strong>Garden Tip:</strong> Perfect weather for outdoor planting tasks!
-                  </AlertDescription>
-                </Alert>
-              </div>
             </CardContent>
           </Card>
         </div>

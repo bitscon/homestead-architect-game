@@ -9,7 +9,7 @@ import { TabHeader } from '@/components/ui/TabHeader';
 import { StatCard, EmptyState } from '@/components/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar } from '@/components/ui/calendar';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { BreedingForm } from '@/features/breeding/BreedingForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import {
@@ -25,7 +25,6 @@ import { awardXP } from '@/game/gameEngine';
 
 const BreedingTracker = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showForm, setShowForm] = useState(false);

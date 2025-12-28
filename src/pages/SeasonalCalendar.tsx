@@ -12,7 +12,7 @@ import {
 } from '@/features/tasks/api';
 import { getProperties, Property } from '@/features/properties/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import {
@@ -27,7 +27,6 @@ import { awardXP } from '@/game/gameEngine';
 
 export default function SeasonalCalendar() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);

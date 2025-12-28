@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { GoalForm } from '@/features/goals/GoalForm';
 import { GoalUpdateModal } from '@/features/goals/GoalUpdateModal';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -27,7 +27,6 @@ import { awardXP } from '@/game/gameEngine';
 
 const HomesteadGoals = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedGoal, setSelectedGoal] = useState<HomesteadGoal | null>(null);
   const [showForm, setShowForm] = useState(false);

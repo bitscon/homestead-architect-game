@@ -11,12 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const Topbar = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
