@@ -5,7 +5,78 @@
 
 ---
 
-## 2025-12-28 — Standalone Website with Complete Stripe Integration
+## 2025-12-28 PM — Production Deployment Preparation Complete
+### Goal
+Fix production URLs, create deployment scripts, and prepare website for live deployment to homesteadarchitect.com
+
+### What changed
+- ✅ Updated all dev URLs (`mybarn.barn.workshop.home`) to production (`myhome.homesteadarchitect.com`)
+- ✅ Fixed free tier redirect to point to production app
+- ✅ Fixed login/signup links in Navigation component
+- ✅ Fixed success page redirect to production dashboard
+- ✅ Fixed CTA and Hero component URLs
+- ✅ Rebuilt website with production configuration (v1.0.1)
+- ✅ Created automated deployment script (DEPLOY_TO_VPS.sh)
+- ✅ Created comprehensive step-by-step deployment guide (DEPLOYMENT_STEPS.md)
+- ✅ Created quick reference deployment guide (READY_TO_DEPLOY.md)
+- ✅ Regenerated deployment package (homestead-architect-website-v1.0.1.zip - 316KB)
+- ✅ Committed and pushed all changes to GitHub (commit: 2672e03)
+
+### Files touched
+**Updated components with production URLs:**
+- `websites/homestead-architect-website/src/components/landing/Pricing.tsx`
+- `websites/homestead-architect-website/src/components/landing/Navigation.tsx`
+- `websites/homestead-architect-website/src/components/landing/Hero.tsx`
+- `websites/homestead-architect-website/src/components/landing/CTA.tsx`
+- `websites/homestead-architect-website/src/pages/Success.tsx`
+
+**Created deployment documentation:**
+- `websites/homestead-architect-website/DEPLOY_TO_VPS.sh` - Automated deployment script
+- `websites/homestead-architect-website/DEPLOYMENT_STEPS.md` - Manual step-by-step guide
+- `websites/homestead-architect-website/READY_TO_DEPLOY.md` - Quick start guide
+
+**Rebuilt and repackaged:**
+- Rebuilt `dist/` folder with production URLs
+- Created `homestead-architect-website-v1.0.1.zip` (316KB)
+- Removed old v1.0.0 package
+
+### Commands run / checks
+- `npm run build` - rebuilt website with production URLs (1.96s)
+- `zip -r homestead-architect-website-v1.0.1.zip` - created deployment package
+- `git add -A && git commit && git push` - committed changes
+- ✅ Build successful: 188KB JS, 18KB CSS, 244KB image
+- ✅ All production URLs verified
+- ✅ Changes pushed to GitHub
+
+### Current status
+- ✅ Done: Website rebuilt with production configuration
+- ✅ Done: All dev URLs replaced with production URLs
+- ✅ Done: Comprehensive deployment scripts created
+- ✅ Done: Deployment documentation complete
+- ✅ Done: Changes committed and pushed to GitHub
+- ⏸️ Pending: Actual deployment to OVH VPS (manual step)
+- ⏸️ Pending: SSL certificate setup
+- ⏸️ Pending: Production testing
+
+### Next 3 actions
+1) Deploy API server to OVH VPS (`vps-5385eb51.vps.ovh.us`)
+2) Deploy website files to `/var/www/homesteadarchitect.com`
+3) Test complete user flow from landing page through Stripe to main app
+
+### Production URLs Configured
+- Landing page: `https://homesteadarchitect.com`
+- Main app: `https://myhome.homesteadarchitect.com`
+- Free tier redirect: `https://myhome.homesteadarchitect.com/auth/register?plan=free`
+- Login: `https://myhome.homesteadarchitect.com/auth/login`
+
+### Open questions
+- Do you have SSH access to `vps-5385eb51.vps.ovh.us` ready?
+- Do you prefer automated or manual deployment?
+- Should we add webhook integration for automatic account provisioning after payment?
+
+---
+
+## 2025-12-28 AM — Standalone Website with Complete Stripe Integration
 ### Goal
 Create standalone landing page for homesteadarchitect.com with complete Stripe payment integration, monthly/yearly pricing, and free tier for user acquisition
 

@@ -1,0 +1,178 @@
+name: Deploy Landing Page Website
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: "Type 'deploy' to confirm deployment"
+        required: true
+        type: string
+      log_level:
+        description: "Log verbosity level"
+        required: true
+        default: "info"
+        type: choice
+        options:
+          - info
+          - debug
+
+jobs:
+  deploy-website:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm_deploy == 'deploy' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: websites/homestead-architect-website/package-lock.json
+
+      - name: Build website
+        run: |
+          echo "📦 Building landing page website..."
+          cd websites/homestead-architect-website
+          npm ci
+          npm run build
+          echo "✅ Build complete"
+          ls -lh dist/
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            set -e
+            
+            if [ "${{ github.event.inputs.log_level }}" = "debug" ]; then
+              set -x
+            fi
+
+            echo "🚀 Deploying Homestead Architect Landing Page..."
+            echo "Repository: ${{ github.repository }}"
+            echo "Branch: ${{ github.ref_name }}"
+            echo "Commit: ${{ github.sha }}"
+            echo "---"
+
+            echo "📂 Creating deployment directories..."
+            sudo mkdir -p /var/www/homesteadarchitect.com
+            sudo mkdir -p /var/www/homestead-api
+            
+            echo "📥 Fetching latest code..."
+            cd ${{ secrets.PROD_APP_PATH }}
+            git fetch origin --prune
+            git checkout main
+            git pull origin main
+            
+            echo "📋 Current commit: $(git rev-parse --short HEAD)"
+
+            echo "🔨 Building website on server..."
+            cd websites/homestead-architect-website
+            npm ci --omit=dev
+            npm run build
+
+            echo "🔧 Deploying API server..."
+            sudo mkdir -p /var/www/homestead-api
+            sudo cp -f deploy-api.js /var/www/homestead-api/
+            sudo cp -rf api /var/www/homestead-api/ || true
+            
+            cd /var/www/homestead-api
+            sudo npm install express stripe cors dotenv --save || true
+
+            if [ ! -f ".env" ]; then
+              echo "🔐 Creating .env file..."
+              echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" | sudo tee .env > /dev/null
+              echo "PORT=3001" | sudo tee -a .env > /dev/null
+              echo "NODE_ENV=production" | sudo tee -a .env > /dev/null
+              sudo chmod 600 .env
+            fi
+
+            if ! command -v pm2 &> /dev/null; then
+              echo "📦 Installing PM2..."
+              sudo npm install -g pm2
+            fi
+
+            echo "🚀 Starting API server with PM2..."
+            pm2 delete homestead-api 2>/dev/null || true
+            pm2 start deploy-api.js --name homestead-api
+            pm2 save
+
+            echo "🌐 Deploying website files..."
+            cd ${{ secrets.PROD_APP_PATH }}/websites/homestead-architect-website
+            sudo rm -rf /var/www/homesteadarchitect.com/*
+            sudo cp -r dist/* /var/www/homesteadarchitect.com/
+            sudo chown -R www-data:www-data /var/www/homesteadarchitect.com
+            sudo chmod -R 755 /var/www/homesteadarchitect.com
+
+            echo "⏳ Waiting for services to stabilize (5 seconds)..."
+            sleep 5
+
+            echo "🏥 Running health checks..."
+            
+            if pm2 status | grep -q "homestead-api.*online"; then
+              echo "✅ API server is running"
+              pm2 status
+            else
+              echo "❌ API server failed to start!"
+              pm2 logs homestead-api --lines 50
+              exit 1
+            fi
+
+            if curl -f -s http://localhost:3001/health > /dev/null; then
+              echo "✅ API health check passed"
+              curl -s http://localhost:3001/health
+            else
+              echo "⚠️ Warning - API not responding on port 3001"
+              pm2 logs homestead-api --lines 20
+            fi
+
+            if [ -f "/var/www/homesteadarchitect.com/index.html" ]; then
+              echo "✅ Website files deployed successfully"
+              ls -lh /var/www/homesteadarchitect.com/
+            else
+              echo "❌ Website files missing!"
+              exit 1
+            fi
+
+            echo "✅ Deployment completed successfully!"
+
+      - name: Deployment successful
+        if: success()
+        run: |
+          echo "✅ Landing page deployment completed successfully!"
+          echo ""
+          echo "🌐 Website URL: https://homesteadarchitect.com"
+          echo "🔧 API URL: https://homesteadarchitect.com/api/*"
+          echo ""
+          echo "📊 Monitoring Commands:"
+          echo "  - Check API status: pm2 status"
+          echo "  - View API logs: pm2 logs homestead-api"
+          echo "  - Restart API: pm2 restart homestead-api"
+          echo ""
+          echo "🧪 Next Steps:"
+          echo "1. Configure Nginx reverse proxy for /api/* → localhost:3001"
+          echo "2. Configure Nginx to serve static files from /var/www/homesteadarchitect.com"
+          echo "3. Enable SSL certificate with Let's Encrypt"
+          echo "4. Test free tier signup flow"
+          echo "5. Test Stripe checkout with test card"
+
+      - name: Deployment failed
+        if: failure()
+        run: |
+          echo "❌ Landing page deployment failed!"
+          echo ""
+          echo "🔍 Troubleshooting steps:"
+          echo "1. SSH to server: ssh ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}"
+          echo "2. Check API logs: pm2 logs homestead-api"
+          echo "3. Check API status: pm2 status"
+          echo "4. Check website files: ls -la /var/www/homesteadarchitect.com"
+          echo "5. Check Nginx logs: sudo tail -f /var/log/nginx/error.log"
+          exit 1
