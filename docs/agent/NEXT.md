@@ -34,23 +34,36 @@ This file outlines the current goal and actionable next steps for development se
 
 ## Immediate Next Steps
 
-### 🚀 Ready to Deploy - Choose Your Method
+### 🚀 Deploy via GitHub Actions (RECOMMENDED)
 
-**Deployment Package:** `homestead-architect-website-v1.0.1.zip` (316KB)  
+**Workflow:** `.github/workflows/deploy-website.yml`  
 **Server:** `vps-5385eb51.vps.ovh.us` (15.204.225.161)  
-**Quick Start:** See `READY_TO_DEPLOY.md` for instructions
+**Documentation:** See `READY_TO_DEPLOY.md` for post-deployment steps
 
-### Option A: Automated Deployment (Recommended)
-- [ ] **Upload Package**: Transfer `homestead-architect-website-v1.0.1.zip` to server
-- [ ] **Run Script**: Execute `sudo bash DEPLOY_TO_VPS.sh`
-- [ ] **Verify**: Check API health and website loading
+### Step 1: Run GitHub Actions Workflow
+- [ ] Go to: https://github.com/bitscon/homestead-architect-game/actions
+- [ ] Select: **"Deploy Landing Page Website"** workflow
+- [ ] Click: **"Run workflow"**
+- [ ] Type: `deploy` to confirm
+- [ ] Select log level: `info` (or `debug` for troubleshooting)
+- [ ] Click: **"Run workflow"** button
+- [ ] Monitor: Workflow will build website, deploy API + website files, start PM2
 
-### Option B: Manual Deployment
-- [ ] **Deploy API Server**: Upload `api/` folder to `/var/www/homestead-api` and configure PM2
-- [ ] **Deploy Website**: Upload `dist/` folder to `/var/www/homesteadarchitect.com`
-- [ ] **Configure Nginx**: Set up reverse proxy for API and static files
-- [ ] **Enable SSL**: Install Let's Encrypt certificate for HTTPS
-- [ ] **Test Complete Flow**: Free tier, monthly/yearly pricing, payment success
+### Step 2: Configure Nginx (After Workflow Completes)
+- [ ] SSH to server: `ssh billybs@vps-5385eb51.vps.ovh.us`
+- [ ] Run: `cd ~/apps/homestead-architect-game/websites/homestead-architect-website`
+- [ ] Run: `sudo bash configure-nginx.sh`
+- [ ] Verify: `sudo nginx -t` and `sudo systemctl status nginx`
+
+### Step 3: Enable SSL
+- [ ] Run: `sudo certbot --nginx -d homesteadarchitect.com -d www.homesteadarchitect.com`
+- [ ] Follow prompts to configure SSL
+- [ ] Test: Visit `https://homesteadarchitect.com`
+
+### Alternative: Manual Deployment
+If GitHub Actions fails, use manual deployment:
+- [ ] See `DEPLOYMENT_STEPS.md` for complete manual process
+- [ ] Or run: `DEPLOY_TO_VPS.sh` script on server
 
 ### Post-Deployment Verification
 - [ ] Test free tier redirect to main app with ?plan=free parameter

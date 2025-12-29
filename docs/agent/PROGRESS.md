@@ -5,9 +5,9 @@
 
 ---
 
-## 2025-12-28 PM — Production Deployment Preparation Complete
+## 2025-12-28 PM — Production Deployment Preparation Complete + GitHub Actions Workflow
 ### Goal
-Fix production URLs, create deployment scripts, and prepare website for live deployment to homesteadarchitect.com
+Fix production URLs, create deployment automation via GitHub Actions, and prepare website for live deployment to homesteadarchitect.com
 
 ### What changed
 - ✅ Updated all dev URLs (`mybarn.barn.workshop.home`) to production (`myhome.homesteadarchitect.com`)
@@ -19,8 +19,10 @@ Fix production URLs, create deployment scripts, and prepare website for live dep
 - ✅ Created automated deployment script (DEPLOY_TO_VPS.sh)
 - ✅ Created comprehensive step-by-step deployment guide (DEPLOYMENT_STEPS.md)
 - ✅ Created quick reference deployment guide (READY_TO_DEPLOY.md)
+- ✅ **Created GitHub Actions workflow for automated deployment** (deploy-website.yml)
+- ✅ Created Nginx configuration script (configure-nginx.sh)
 - ✅ Regenerated deployment package (homestead-architect-website-v1.0.1.zip - 316KB)
-- ✅ Committed and pushed all changes to GitHub (commit: 2672e03)
+- ✅ Committed and pushed all changes to GitHub (commits: 2672e03, e9df4d0)
 
 ### Files touched
 **Updated components with production URLs:**
@@ -30,10 +32,12 @@ Fix production URLs, create deployment scripts, and prepare website for live dep
 - `websites/homestead-architect-website/src/components/landing/CTA.tsx`
 - `websites/homestead-architect-website/src/pages/Success.tsx`
 
-**Created deployment documentation:**
-- `websites/homestead-architect-website/DEPLOY_TO_VPS.sh` - Automated deployment script
+**Created deployment automation:**
+- `.github/workflows/deploy-website.yml` - GitHub Actions workflow for automated deployment
+- `websites/homestead-architect-website/DEPLOY_TO_VPS.sh` - Manual automated deployment script
 - `websites/homestead-architect-website/DEPLOYMENT_STEPS.md` - Manual step-by-step guide
 - `websites/homestead-architect-website/READY_TO_DEPLOY.md` - Quick start guide
+- `websites/homestead-architect-website/configure-nginx.sh` - Nginx configuration script
 
 **Rebuilt and repackaged:**
 - Rebuilt `dist/` folder with production URLs
@@ -59,9 +63,9 @@ Fix production URLs, create deployment scripts, and prepare website for live dep
 - ⏸️ Pending: Production testing
 
 ### Next 3 actions
-1) Deploy API server to OVH VPS (`vps-5385eb51.vps.ovh.us`)
-2) Deploy website files to `/var/www/homesteadarchitect.com`
-3) Test complete user flow from landing page through Stripe to main app
+1) Run GitHub Actions workflow "Deploy Landing Page Website" (type 'deploy' to confirm)
+2) After deployment: SSH to server and run `sudo bash configure-nginx.sh`
+3) Enable SSL and test complete user flow from landing page through Stripe to main app
 
 ### Production URLs Configured
 - Landing page: `https://homesteadarchitect.com`
