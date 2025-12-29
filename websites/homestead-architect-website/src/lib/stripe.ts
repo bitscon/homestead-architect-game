@@ -72,22 +72,31 @@ export const pricingTiers: PricingTier[] = [
 ];
 
 // Function to create checkout session
-export const createCheckoutSession = async (priceId: string, successUrl?: string, cancelUrl?: string) => {
+export const createCheckoutSession = async (
+  priceId: string, 
+  email: string,
+  plan: string,
+  successUrl?: string, 
+  cancelUrl?: string
+) => {
   try {
-    const response = await fetch('/api/create-checkout-session', {
+    const response = await fetch('/api/stripe/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         priceId,
-        successUrl: successUrl || `${window.location.origin}/success`,
+        email,
+        plan,
+        successUrl: successUrl || `${window.location.origin}/checkout-complete`,
         cancelUrl: cancelUrl || `${window.location.origin}/pricing`
       }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create checkout session');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
     const data = await response.json();

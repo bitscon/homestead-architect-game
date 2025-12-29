@@ -7,15 +7,34 @@ import { useState } from "react";
 const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
-  const handleSubscribe = async (tierId: string, priceId: string) => {
+  const handleSubscribe = async (tierId: string, priceId: string, _planName: string) => {
     if (tierId === 'free') {
       // For free tier, redirect directly to registration with plan parameter
       window.location.href = 'https://myhome.homesteadarchitect.com/auth/register?plan=free';
       return;
     }
 
+    // For paid plans, prompt for email
+    const email = prompt('Please enter your email address to continue to checkout:');
+    
+    if (!email) {
+      return; // User canceled
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
     try {
-      const session = await createCheckoutSession(priceId);
+      const session = await createCheckoutSession(
+        priceId,
+        email.trim(),
+        tierId
+      );
+      
       if (session.url) {
         window.location.href = session.url;
       }
@@ -109,7 +128,7 @@ const Pricing = () => {
                         ? 'bg-gradient-primary hover:opacity-90 transition-opacity shadow-elevation'
                         : 'bg-primary hover:bg-primary/90'
                   }`}
-                  onClick={() => handleSubscribe(tier.id, currentPriceId)}
+                  onClick={() => handleSubscribe(tier.id, currentPriceId, tier.name)}
                 >
                   {tier.id === 'free' ? 'Get Started Free' : `Start ${tier.name} Plan`}
                 </Button>
