@@ -22,10 +22,10 @@ const Navigation = () => {
             </a>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" href="https://mybarn.barn.workshop.home/auth/login">
+            <Button variant="outline" href="https://myhome.homesteadarchitect.com/auth/login">
               Login
             </Button>
-            <Button className="bg-gradient-warm hover:opacity-90 transition-opacity shadow-soft" href="https://mybarn.barn.workshop.home/auth/register?plan=free">
+            <Button className="bg-gradient-warm hover:opacity-90 transition-opacity shadow-soft" href="https://myhome.homesteadarchitect.com/auth/register?plan=free">
               Get Started Free
             </Button>
           </div>

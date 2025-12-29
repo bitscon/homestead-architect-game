@@ -43,7 +43,7 @@ const Success = () => {
             <Button
               size="lg"
               className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-elevation w-full"
-              onClick={() => window.location.href = 'https://mybarn.barn.workshop.home/auth/login'}
+              onClick={() => window.location.href = 'https://myhome.homesteadarchitect.com/auth/login'}
             >
               Go to Your Dashboard
               <ArrowRight className="ml-2 h-4 w-4" />

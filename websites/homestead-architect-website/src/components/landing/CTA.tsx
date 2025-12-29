@@ -12,7 +12,7 @@ const CTA = () => {
           <p className="text-lg mb-8 opacity-90">
             Start planning your homestead today. Free plan available - no credit card required.
           </p>
-          <Button size="lg" variant="secondary" className="bg-gradient-warm hover:opacity-90 transition-colors shadow-soft text-primary-foreground" href="https://mybarn.barn.workshop.home/auth/register?plan=free">
+          <Button size="lg" variant="secondary" className="bg-gradient-warm hover:opacity-90 transition-colors shadow-soft text-primary-foreground" href="https://myhome.homesteadarchitect.com/auth/register?plan=free">
             Get Started Free
           </Button>
         </div>

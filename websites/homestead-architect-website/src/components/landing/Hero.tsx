@@ -15,7 +15,7 @@ const Hero = () => {
               Plan the perfect property layout with intuitive tools. Create sustainable spaces for gardens, livestock, orchards, and buildings that work in harmony with nature.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-gradient-warm hover:opacity-90 transition-opacity shadow-soft text-base" href="https://mybarn.barn.workshop.home/auth/register?plan=free">
+              <Button size="lg" className="bg-gradient-warm hover:opacity-90 transition-opacity shadow-soft text-base" href="https://myhome.homesteadarchitect.com/auth/register?plan=free">
                 Get Started Free
               </Button>
               <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-elevation text-base" href="#pricing">

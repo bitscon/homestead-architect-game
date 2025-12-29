@@ -10,7 +10,7 @@ const Pricing = () => {
   const handleSubscribe = async (tierId: string, priceId: string) => {
     if (tierId === 'free') {
       // For free tier, redirect directly to registration with plan parameter
-      window.location.href = 'https://mybarn.barn.workshop.home/auth/register?plan=free';
+      window.location.href = 'https://myhome.homesteadarchitect.com/auth/register?plan=free';
       return;
     }
 
